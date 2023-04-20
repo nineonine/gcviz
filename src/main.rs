@@ -1,10 +1,10 @@
-use std::io;
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
 use gcviz::app::{App, AppResult};
 use gcviz::event::{Event, EventHandler};
 use gcviz::handler::handle_key_events;
 use gcviz::tui::Tui;
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
+use std::io;
 
 fn main() -> AppResult<()> {
     // Create an application.
