@@ -7,6 +7,11 @@ use ratatui::{
     widgets::{Block, Borders, Widget},
 };
 
+pub struct Heap<'a> {
+    array: Vec<MemoryCell>,
+    viz: HeapGrid<'a>,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct MemoryCell {
     pub status: CellStatus,
@@ -14,19 +19,20 @@ pub struct MemoryCell {
 
 #[derive(Clone, Copy, Debug)]
 pub enum CellStatus {
-    Free,
+    Freed,
     Allocated,
     Marked,
+    Used,
 }
 
-pub struct MemoryGrid<'a> {
+pub struct HeapGrid<'a> {
     block: Block<'a>,
     memory: Vec<MemoryCell>,
     num_cols: usize,
     num_rows: usize,
 }
 
-impl<'a> MemoryGrid<'a> {
+impl<'a> HeapGrid<'a> {
     pub fn new(memory: Vec<MemoryCell>) -> Self {
         let memory_len = memory.len();
         let num_cols = (memory_len as f64).sqrt().ceil() as usize;
@@ -45,7 +51,7 @@ impl<'a> MemoryGrid<'a> {
     }
 }
 
-impl<'a> Widget for MemoryGrid<'a> {
+impl<'a> Widget for HeapGrid<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let Self {
             block,
@@ -87,9 +93,10 @@ impl<'a> Widget for MemoryGrid<'a> {
                 };
 
                 let cell_style = match cell.status {
-                    CellStatus::Free => Style::default().bg(Color::Green),
-                    CellStatus::Allocated => Style::default().bg(Color::Blue),
-                    CellStatus::Marked => Style::default().bg(Color::Red),
+                    CellStatus::Freed => Style::default().bg(Color::Black),
+                    CellStatus::Allocated => Style::default().bg(Color::Green),
+                    CellStatus::Marked => Style::default().bg(Color::Yellow),
+                    CellStatus::Used => Style::default().bg(Color::LightGreen),
                 };
 
                 for y in cell_rect.top()..cell_rect.bottom() {

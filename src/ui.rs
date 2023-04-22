@@ -1,19 +1,16 @@
 use ratatui::{
     backend::Backend,
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    layout::{Alignment, Constraint, Corner, Direction, Layout},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
-use crate::{app::App, mem::MemoryGrid};
+use crate::{app::App, heap::HeapGrid};
 
 /// Renders the user interface widgets.
 pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
-    // This is where you add new widgets.
-    // See the following resources:
-    // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
-    // - https://github.com/tui-rs-revival/ratatui/tree/master/examples
     f.render_widget(
         Paragraph::new("Press `Esc`, `Ctrl-C` or `q` to quit.".to_string())
             .block(
@@ -58,7 +55,30 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
         )
         .split(chunks[1]);
 
-    let memory_grid = MemoryGrid::new(app.mem.clone());
+    let logs: Vec<ListItem> = app
+        .logs
+        .iter()
+        .rev()
+        .map(|&(event, level)| {
+            let s = match level {
+                "CRITICAL" => Style::default().fg(Color::Red),
+                "ERROR" => Style::default().fg(Color::Magenta),
+                "WARNING" => Style::default().fg(Color::Yellow),
+                "INFO" => Style::default().fg(Color::Blue),
+                _ => Style::default(),
+            };
+            ListItem::new(vec![
+                Spans::from("-".repeat(chunks[1].width as usize)),
+                Spans::from(vec![Span::styled(format!("{level} {event}"), s)])
+            ])
+        })
+        .collect();
+    let logs_list = List::new(logs)
+        .block(Block::default().borders(Borders::ALL).title("Events"))
+        .start_corner(Corner::BottomLeft);
+    f.render_widget(logs_list, inner_chunks[1]);
+
+    let memory_grid = HeapGrid::new(app.mem.clone());
     f.render_widget(memory_grid, inner_chunks[2]);
 
     let block = Block::default().title("Footer").borders(Borders::ALL);

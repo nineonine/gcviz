@@ -14,4 +14,21 @@ pub mod tui;
 pub mod handler;
 
 /// UI memory representation.
-pub mod mem;
+pub mod heap;
+
+/// Mutator implementation.
+pub mod mutator;
+
+///
+pub mod ast;
+
+/// Object type
+pub mod object;
+
+/// Allocator implementation.
+pub mod allocator;
+
+/// Errors
+pub mod error;
+
+pub mod gc;
