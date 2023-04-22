@@ -1,5 +1,5 @@
 pub enum VMError {
-    AllocError,
+    AllocationError,
     ReadError,
     WriteError,
     GCError,

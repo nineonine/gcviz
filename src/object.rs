@@ -5,6 +5,12 @@ pub struct Object {
     fields: Vec<Field>,
 }
 
+impl Object {
+    pub fn size(&self) -> usize {
+        self.fields.len()
+    }
+}
+
 struct ObjHeader {}
 
 enum Field {

@@ -1,5 +1,4 @@
-use std::cmp;
-
+use std::{cmp, collections::HashMap};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -7,14 +6,33 @@ use ratatui::{
     widgets::{Block, Borders, Widget},
 };
 
-pub struct Heap<'a> {
-    array: Vec<MemoryCell>,
-    viz: HeapGrid<'a>,
+use crate::object::{ObjAddr, Object};
+
+pub struct Heap {
+    pub roots: HashMap<ObjAddr, Object>,
+    pub free_list: Vec<(usize, usize)>,
+    pub memory: Vec<MemoryCell>,
+}
+
+impl Heap {
+    pub fn new(size: usize) -> Self {
+        Heap {
+            roots: HashMap::new(),
+            memory: vec![MemoryCell::free(); size],
+            free_list: vec![(0, size)],
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct MemoryCell {
     pub status: CellStatus,
+}
+
+impl MemoryCell {
+    pub fn free() -> Self {
+        MemoryCell { status:CellStatus::Freed }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
