@@ -30,14 +30,14 @@ impl VirtualMachine {
                         Err(err) => {},
                     }
                 },
-                Read(addr, offset) => {
-                    match mutator.read(heap, addr, offset) {
+                Read(addr) => {
+                    match mutator.read(heap, addr) {
                         Ok(()) => {},
                         Err(err) => {},
                     }
                 },
-                Write(addr, offset, value) => {
-                    match mutator.write(heap, addr, offset, value) {
+                Write(addr, value) => {
+                    match mutator.write(heap, addr, value) {
                         Ok(addr) => {},
                         Err(err) => {},
                     }

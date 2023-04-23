@@ -1,8 +1,8 @@
 pub type ObjAddr = usize;
-pub type Offset = usize;
 pub type Value = usize;
 
 pub struct Object {
+    #[allow(dead_code)]
     header: ObjHeader,
     pub fields: Vec<Field>,
 }

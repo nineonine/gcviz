@@ -1,10 +1,10 @@
-use crate::object::{Address, Object, Offset};
+use crate::object::{Address, Object, Value};
 
 pub type Program = Vec<ExecFrame>;
 
 pub enum ExecFrame {
     Allocate(Object),
-    Read(Address, Offset),
-    Write(Address, Offset, usize),
+    Read(Address),
+    Write(Address, Value),
     GC,
 }
