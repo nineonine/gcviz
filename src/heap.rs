@@ -1,4 +1,4 @@
-use std::{cmp, collections::HashMap};
+use std::{cmp, collections::{HashSet, BTreeMap}};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -6,10 +6,11 @@ use ratatui::{
     widgets::{Block, Borders, Widget},
 };
 
-use crate::object::{ObjAddr, Object};
+use crate::{object::{ObjAddr, Object}, error::VMError};
 
 pub struct Heap {
-    pub roots: HashMap<ObjAddr, Object>,
+    pub roots: HashSet<ObjAddr>,
+    pub objects: BTreeMap<ObjAddr, Object>,
     pub free_list: Vec<(usize, usize)>,
     pub memory: Vec<MemoryCell>,
 }
@@ -17,10 +18,22 @@ pub struct Heap {
 impl Heap {
     pub fn new(size: usize) -> Self {
         Heap {
-            roots: HashMap::new(),
+            roots: HashSet::new(),
+            objects: BTreeMap::new(),
             memory: vec![MemoryCell::free(); size],
             free_list: vec![(0, size)],
         }
+    }
+
+    pub fn lookup_object(&self, address: ObjAddr) -> Result<ObjAddr, VMError> {
+        let mut iter = self.objects.range(..=address).rev(); // Get an iterator in reverse order up to the given address
+        if let Some((obj_addr, object)) = iter.next() {
+            let object_size = object.size();
+            if *obj_addr <= address && address < *obj_addr + object_size {
+                return Ok(*obj_addr);
+            }
+        }
+        Err(VMError::IllegalMemoryAccess)
     }
 }
 

@@ -1,6 +1,8 @@
 pub enum VMError {
     AllocationError,
-    ReadError,
-    WriteError,
+    InvalidOffset,
+    SegmentationFault,
+    NullPointerException,
     GCError,
+    IllegalMemoryAccess,
 }

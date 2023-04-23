@@ -35,7 +35,8 @@ impl Allocator {
             }
 
             // Add the object to the roots
-            heap.roots.insert(block_start, object);
+            heap.objects.insert(block_start, object);
+            heap.roots.insert(block_start);
 
             Ok(block_start)
         } else {

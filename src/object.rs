@@ -1,8 +1,10 @@
 pub type ObjAddr = usize;
+pub type Offset = usize;
+pub type Value = usize;
+
 pub struct Object {
     header: ObjHeader,
-    size: usize,
-    fields: Vec<Field>,
+    pub fields: Vec<Field>,
 }
 
 impl Object {
@@ -13,15 +15,12 @@ impl Object {
 
 struct ObjHeader {}
 
-enum Field {
+pub enum Field {
     Ref(Address),
-    Scalar(usize),
+    Scalar(Value),
 }
 
 pub enum Address {
-    Ptr(usize),
+    Ptr(ObjAddr),
     Null,
 }
-
-pub type Offset = usize;
-pub type Value = usize;
