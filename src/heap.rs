@@ -33,7 +33,7 @@ impl Heap {
                 return Ok(*obj_addr);
             }
         }
-        Err(VMError::IllegalMemoryAccess)
+        Err(VMError::SegmentationFault)
     }
 }
 

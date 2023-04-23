@@ -4,5 +4,4 @@ pub enum VMError {
     SegmentationFault,
     NullPointerException,
     GCError,
-    IllegalMemoryAccess,
 }

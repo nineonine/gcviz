@@ -11,10 +11,10 @@ impl Mutator {
 
     pub fn read(&self, heap: &Heap, address: ObjAddr) -> Result<Value, VMError> {
         let object_addr = heap.lookup_object(address)?;
-        let object = heap.objects.get(&object_addr).ok_or(VMError::IllegalMemoryAccess)?;
+        let object = heap.objects.get(&object_addr).ok_or(VMError::SegmentationFault)?;
 
         let field_index = address - object_addr;
-        let field = object.fields.get(field_index).ok_or(VMError::IllegalMemoryAccess)?;
+        let field = object.fields.get(field_index).ok_or(VMError::SegmentationFault)?;
 
         match field {
             Field::Ref(addr) => match addr {
@@ -32,10 +32,10 @@ pub fn write(
     value: Value,
 ) -> Result<(), VMError> {
     let object_addr = heap.lookup_object(address)?;
-    let object = heap.objects.get_mut(&object_addr).ok_or(VMError::IllegalMemoryAccess)?;
+    let object = heap.objects.get_mut(&object_addr).ok_or(VMError::SegmentationFault)?;
 
     let field_index = address - object_addr;
-    let field = object.fields.get_mut(field_index).ok_or(VMError::IllegalMemoryAccess)?;
+    let field = object.fields.get_mut(field_index).ok_or(VMError::SegmentationFault)?;
 
     match field {
         Field::Ref(addr) => {
