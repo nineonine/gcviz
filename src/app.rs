@@ -2,7 +2,11 @@ use std::error;
 
 use rand::{distributions::Uniform, prelude::Distribution};
 
-use crate::{heap::{CellStatus, MemoryCell}, vm::VirtualMachine, gc::collector::GarbageCollector};
+use crate::{
+    gc::collector::GarbageCollector,
+    heap::{CellStatus, MemoryCell},
+    vm::VirtualMachine,
+};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -39,7 +43,7 @@ impl<'a> App<'a> {
             running: true,
             vm: VirtualMachine::new(alignment, heap_size, gc),
             logs: vec![],
-            memviz: vec![],
+            memviz: (0..1024).map(|_| random_memory_cell()).collect(),
         }
     }
 

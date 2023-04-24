@@ -43,8 +43,8 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
     // inner
     let inner_chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .vertical_margin(1)
-        .horizontal_margin(2)
+        // .vertical_margin(1)
+        // .horizontal_margin(2)
         .constraints(
             [
                 Constraint::Percentage(25),

@@ -4,12 +4,22 @@ use crate::object::{Address, Field, ObjAddr, Value};
 
 pub struct Mutator;
 
+impl Default for Mutator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Mutator {
     pub fn new() -> Self {
         Mutator {}
     }
 
     pub fn read(&self, heap: &Heap, address: ObjAddr) -> Result<Value, VMError> {
+        self.read_rec(heap, address)
+    }
+
+    fn read_rec(&self, heap: &Heap, address: ObjAddr) -> Result<Value, VMError> {
         let object_addr = heap.lookup_object(address)?;
         let object = heap
             .objects
