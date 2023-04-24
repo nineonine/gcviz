@@ -1,4 +1,4 @@
-use crate::object::{Object, Value, ObjAddr};
+use crate::object::{ObjAddr, Object, Value};
 
 pub type Program = Vec<ExecFrame>;
 

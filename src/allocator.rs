@@ -10,9 +10,7 @@ pub struct Allocator {
 
 impl Allocator {
     pub fn new(alignment: usize) -> Self {
-        Allocator {
-            alignment
-        }
+        Allocator { alignment }
     }
 
     pub fn allocate(&self, heap: &mut Heap, object: Object) -> Result<ObjAddr, VMError> {

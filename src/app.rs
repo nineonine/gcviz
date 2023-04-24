@@ -2,55 +2,18 @@ use std::error;
 
 use rand::{distributions::Uniform, prelude::Distribution};
 
-use crate::heap::{CellStatus, MemoryCell};
+use crate::{heap::{CellStatus, MemoryCell}, vm::VirtualMachine, gc::collector::GarbageCollector};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 /// Application.
-#[derive(Debug)]
 pub struct App<'a> {
     /// Is the application running?
     pub running: bool,
-    pub mem: Vec<MemoryCell>,
     pub logs: Vec<(&'a str, &'a str)>,
-}
-
-impl<'a> Default for App<'a> {
-    fn default() -> Self {
-        Self {
-            running: true,
-            mem: (0..1024).map(|_| random_memory_cell()).collect(),
-            logs: vec![
-                ("Event1", "INFO"),
-                ("Event2", "INFO"),
-                ("Event3", "CRITICAL"),
-                ("Event4", "ERROR"),
-                ("Event5", "INFO"),
-                ("Event6", "INFO"),
-                ("Event7", "WARNING"),
-                ("Event8", "INFO"),
-                ("Event9", "INFO"),
-                ("Event10", "INFO"),
-                ("Event11", "CRITICAL"),
-                ("Event12", "INFO"),
-                ("Event13", "INFO"),
-                ("Event14", "INFO"),
-                ("Event15", "INFO"),
-                ("Event16", "INFO"),
-                ("Event17", "ERROR"),
-                ("Event18", "ERROR"),
-                ("Event19", "INFO"),
-                ("Event20", "INFO"),
-                ("Event21", "WARNING"),
-                ("Event22", "INFO"),
-                ("Event23", "INFO"),
-                ("Event24", "WARNING"),
-                ("Event25", "INFO"),
-                ("Event26", "INFO"),
-            ],
-        }
-    }
+    pub vm: VirtualMachine,
+    pub memviz: Vec<MemoryCell>,
 }
 
 fn random_memory_cell() -> MemoryCell {
@@ -71,8 +34,13 @@ fn random_memory_cell() -> MemoryCell {
 
 impl<'a> App<'a> {
     /// Constructs a new instance of [`App`].
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(alignment: usize, heap_size: usize, gc: Box<dyn GarbageCollector>) -> Self {
+        Self {
+            running: true,
+            vm: VirtualMachine::new(alignment, heap_size, gc),
+            logs: vec![],
+            memviz: vec![],
+        }
     }
 
     /// Handles the tick event of the terminal.

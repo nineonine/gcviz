@@ -1,6 +1,9 @@
-use crate::{ast::ExecFrame::{Allocate, Read, Write, GC, self}, error::VMError};
 use crate::gc::collector::GarbageCollector;
-use crate::{heap::Heap, allocator::Allocator, mutator::Mutator};
+use crate::{allocator::Allocator, heap::Heap, mutator::Mutator};
+use crate::{
+    ast::ExecFrame::{self, Allocate, Read, Write, GC},
+    error::VMError,
+};
 
 pub struct VirtualMachine {
     pub allocator: Allocator,
@@ -21,21 +24,14 @@ impl VirtualMachine {
 
     pub fn tick(&mut self, frame: ExecFrame) -> Result<(), VMError> {
         match frame {
-            Allocate(obj) => {
-                if let Ok(addr) = self.allocator.allocate(&mut self.heap, obj) {
-                }
+            Allocate(obj) => if let Ok(addr) = self.allocator.allocate(&mut self.heap, obj) {},
+            Read(addr) => match self.mutator.read(&self.heap, addr) {
+                Ok(_value) => {}
+                Err(err) => {}
             },
-            Read(addr) => {
-                match self.mutator.read(&self.heap, addr) {
-                    Ok(_value) => {}
-                    Err(err) => {}
-                }
-            },
-            Write(addr, value) => {
-                match self.mutator.write(&mut self.heap, addr, value) {
-                    Ok(addr) => {}
-                    Err(err) => {}
-                }
+            Write(addr, value) => match self.mutator.write(&mut self.heap, addr, value) {
+                Ok(addr) => {}
+                Err(err) => {}
             },
             GC => match self.collector.collect() {
                 Ok(addr) => {}

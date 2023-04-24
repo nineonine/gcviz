@@ -78,7 +78,7 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
         .start_corner(Corner::BottomLeft);
     f.render_widget(logs_list, inner_chunks[1]);
 
-    let memory_grid = HeapGrid::new(app.mem.clone());
+    let memory_grid = HeapGrid::new(app.memviz.clone());
     f.render_widget(memory_grid, inner_chunks[2]);
 
     let block = Block::default().title("Footer").borders(Borders::ALL);

@@ -2,7 +2,10 @@ use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom
 
 use crate::{
     ast::{ExecFrame, Program},
-    object::{Object, ObjAddr}, vm::VirtualMachine, gc::collector::GarbageCollector, error::VMError,
+    error::VMError,
+    gc::collector::GarbageCollector,
+    object::{ObjAddr, Object},
+    vm::VirtualMachine,
 };
 
 pub struct Parameters {
@@ -10,6 +13,17 @@ pub struct Parameters {
     pub alignment: usize,
     pub num_frames: usize,
     pub probs: FramePropabilities,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Parameters {
+            heap_size: 1024,
+            alignment: 4,
+            num_frames: 100,
+            probs: FramePropabilities::default(),
+        }
+    }
 }
 
 pub struct FramePropabilities {
@@ -74,18 +88,20 @@ impl ProgramGenerator {
     fn gen_allocate(&mut self) -> ExecFrame {
         // Generate a random Object
         let object = Object::random();
-        match self.vm.allocator.allocate(&mut self.vm.heap, object.clone()) {
+        match self
+            .vm
+            .allocator
+            .allocate(&mut self.vm.heap, object.clone())
+        {
             Ok(_) => ExecFrame::Allocate(object),
             Err(_) => panic!("gen_allocate"),
         }
-
     }
 
     fn gen_read(&mut self) -> ExecFrame {
         // Generate a random valid address from the heap
         let mut rng = rand::thread_rng();
-        if let Some(obj_addr) = self.random_object_address()
-        {
+        if let Some(obj_addr) = self.random_object_address() {
             let object = &self.vm.heap.objects[&obj_addr];
             let field_offset = rng.gen_range(0..object.fields.len());
             ExecFrame::Read(obj_addr + field_offset)
@@ -98,7 +114,16 @@ impl ProgramGenerator {
     fn gen_write(&mut self) -> ExecFrame {
         let mut rng = rand::thread_rng();
 
-        if let Some(obj_addr) = self.vm.heap.objects.keys().cloned().collect::<Vec<_>>().choose(&mut rng).cloned() {
+        if let Some(obj_addr) = self
+            .vm
+            .heap
+            .objects
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>()
+            .choose(&mut rng)
+            .cloned()
+        {
             let object = &self.vm.heap.objects[&obj_addr];
             let field_offset = rng.gen_range(0..object.fields.len());
             let address = obj_addr + field_offset;
@@ -119,8 +144,8 @@ impl ProgramGenerator {
                 Ok(_) => ExecFrame::Write(address, value),
                 Err(e) => match e {
                     VMError::AllocationError => ExecFrame::GC,
-                    _ => panic!("gen_write")
-                }
+                    _ => panic!("gen_write"),
+                },
             }
         } else {
             // If there are no objects in the heap, just allocate

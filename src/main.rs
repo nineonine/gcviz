@@ -1,5 +1,6 @@
 use gcviz::app::{App, AppResult};
 use gcviz::event::{Event, EventHandler};
+use gcviz::gc::mark_sweep::MarkSweep;
 use gcviz::handler::handle_key_events;
 use gcviz::tui::Tui;
 use ratatui::backend::CrosstermBackend;
@@ -8,7 +9,8 @@ use std::io;
 
 fn main() -> AppResult<()> {
     // Create an application.
-    let mut app = App::new();
+    let gc = MarkSweep::new();
+    let mut app = App::new(1024, 4, Box::new(gc));
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());
