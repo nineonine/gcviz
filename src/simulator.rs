@@ -2,7 +2,7 @@ use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom
 
 use crate::{
     ast::{ExecFrame, Program},
-    object::{Object, ObjAddr}, vm::VirtualMachine, gc::collector::GarbageCollector,
+    object::{Object, ObjAddr}, vm::VirtualMachine, gc::collector::GarbageCollector, error::VMError,
 };
 
 pub struct Parameters {
@@ -81,18 +81,18 @@ impl ProgramGenerator {
 
     }
 
-    fn gen_read(&self) -> ExecFrame {
+    fn gen_read(&mut self) -> ExecFrame {
         // Generate a random valid address from the heap
         let mut rng = rand::thread_rng();
-        let address = if let Some(obj_addr) = self.random_object_address()
+        if let Some(obj_addr) = self.random_object_address()
         {
             let object = &self.vm.heap.objects[&obj_addr];
             let field_offset = rng.gen_range(0..object.fields.len());
-            obj_addr + field_offset
+            ExecFrame::Read(obj_addr + field_offset)
         } else {
-            panic!("gen_read: Object does not exist")
-        };
-        ExecFrame::Read(address)
+            // If there are no objects in the heap, just allocate
+            self.gen_allocate()
+        }
     }
 
     fn gen_write(&mut self) -> ExecFrame {
@@ -115,9 +115,15 @@ impl ProgramGenerator {
                 self.random_object_address().unwrap()
             };
 
-            ExecFrame::Write(address, value)
+            match self.vm.mutator.write(&mut self.vm.heap, address, value) {
+                Ok(_) => ExecFrame::Write(address, value),
+                Err(e) => match e {
+                    VMError::AllocationError => ExecFrame::GC,
+                    _ => panic!("gen_write")
+                }
+            }
         } else {
-            // If there are no objects in the heap, just allocate simple 1 field object
+            // If there are no objects in the heap, just allocate
             self.gen_allocate()
         }
     }

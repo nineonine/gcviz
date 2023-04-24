@@ -32,7 +32,7 @@ impl Object {
             })
             .collect();
 
-        // Create an object with the generated fields
+        // Create an object with generated fields
         Object {
             header: ObjHeader {},
             fields,
