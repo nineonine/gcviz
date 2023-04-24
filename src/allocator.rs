@@ -1,14 +1,18 @@
 use crate::{
     error::VMError,
-    heap::{Heap, CellStatus},
+    heap::{CellStatus, Heap},
     object::{ObjAddr, Object},
 };
 
-pub struct Allocator {}
+pub struct Allocator {
+    pub alignment: usize,
+}
 
 impl Allocator {
-    pub fn new() -> Self {
-        Allocator {}
+    pub fn new(alignment: usize) -> Self {
+        Allocator {
+            alignment
+        }
     }
 
     pub fn allocate(&self, heap: &mut Heap, object: Object) -> Result<ObjAddr, VMError> {
@@ -30,12 +34,12 @@ impl Allocator {
             }
 
             // Store the object in the memory
+            heap.objects.insert(block_start, object);
             for cell in &mut heap.memory[block_start..block_start + size] {
                 cell.status = CellStatus::Allocated;
             }
 
             // Add the object to the roots
-            heap.objects.insert(block_start, object);
             heap.roots.insert(block_start);
 
             Ok(block_start)

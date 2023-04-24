@@ -69,7 +69,7 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
             };
             ListItem::new(vec![
                 Spans::from("-".repeat(chunks[1].width as usize)),
-                Spans::from(vec![Span::styled(format!("{level} {event}"), s)])
+                Spans::from(vec![Span::styled(format!("{level} {event}"), s)]),
             ])
         })
         .collect();

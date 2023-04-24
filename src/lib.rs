@@ -19,7 +19,7 @@ pub mod heap;
 /// Mutator implementation.
 pub mod mutator;
 
-///
+/// Program representation.
 pub mod ast;
 
 /// Object type
@@ -31,4 +31,11 @@ pub mod allocator;
 /// Errors
 pub mod error;
 
+// Garbage collection implementations.
 pub mod gc;
+
+// Program generation/simulation.
+pub mod simulator;
+
+// Virtual Machine Emulation.
+pub mod vm;

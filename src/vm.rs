@@ -1,54 +1,47 @@
-use std::collections::HashSet;
+use crate::{ast::ExecFrame::{Allocate, Read, Write, GC, self}, error::VMError};
+use crate::gc::collector::GarbageCollector;
+use crate::{heap::Heap, allocator::Allocator, mutator::Mutator};
 
 pub struct VirtualMachine {
-    allocator: Allocator,
-    mutator: Mutator,
-    collector: Collector,
-
-    heap: Heap,
-    roots: HashSet<ObjAddr>,
-
-    heap_size: usize,
-    alignment: usize,
+    pub allocator: Allocator,
+    pub mutator: Mutator,
+    pub collector: Box<dyn GarbageCollector>,
+    pub heap: Heap,
 }
 
 impl VirtualMachine {
-    pub fn new() -> Self {
+    pub fn new(alignment: usize, heap_size: usize, gc: Box<dyn GarbageCollector>) -> Self {
         VirtualMachine {
-            allocator: Allocator::new(),
+            allocator: Allocator::new(alignment),
             mutator: Mutator::new(),
-            collector: Collector::new(),
+            collector: gc,
+            heap: Heap::new(heap_size),
         }
     }
 
-    pub fn run(&self, mut program: Program) {
-        while Some(frame) = program.pop() {
-            match frame {
-                Allocate(obj) => {
-                    match allocator.allocate(heap, obj) {
-                        Ok(addr) => {},
-                        Err(err) => {},
-                    }
-                },
-                Read(addr) => {
-                    match mutator.read(heap, addr) {
-                        Ok(()) => {},
-                        Err(err) => {},
-                    }
-                },
-                Write(addr, value) => {
-                    match mutator.write(heap, addr, value) {
-                        Ok(addr) => {},
-                        Err(err) => {},
-                    }
-                },
-                GC => {
-                    match collector.collect() {
-                        None => {},
-                        Some(_) => {}
-                    }
+    pub fn tick(&mut self, frame: ExecFrame) -> Result<(), VMError> {
+        match frame {
+            Allocate(obj) => {
+                if let Ok(addr) = self.allocator.allocate(&mut self.heap, obj) {
                 }
-            }
+            },
+            Read(addr) => {
+                match self.mutator.read(&self.heap, addr) {
+                    Ok(_value) => {}
+                    Err(err) => {}
+                }
+            },
+            Write(addr, value) => {
+                match self.mutator.write(&mut self.heap, addr, value) {
+                    Ok(addr) => {}
+                    Err(err) => {}
+                }
+            },
+            GC => match self.collector.collect() {
+                Ok(addr) => {}
+                Err(err) => {}
+            },
         }
+        Ok(())
     }
 }

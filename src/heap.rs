@@ -1,12 +1,18 @@
-use std::{cmp, collections::{HashSet, BTreeMap}};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
     widgets::{Block, Borders, Widget},
 };
+use std::{
+    cmp,
+    collections::{BTreeMap, HashSet},
+};
 
-use crate::{object::{ObjAddr, Object}, error::VMError};
+use crate::{
+    error::VMError,
+    object::{ObjAddr, Object},
+};
 
 pub struct Heap {
     pub roots: HashSet<ObjAddr>,
@@ -44,7 +50,9 @@ pub struct MemoryCell {
 
 impl MemoryCell {
     pub fn free() -> Self {
-        MemoryCell { status:CellStatus::Freed }
+        MemoryCell {
+            status: CellStatus::Freed,
+        }
     }
 }
 
