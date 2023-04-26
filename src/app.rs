@@ -23,7 +23,7 @@ pub struct App {
     pub memviz: Vec<MemoryCell>,
 }
 
-static LOG_CAPACITY: usize = 21;
+static LOG_CAPACITY: usize = 30;
 
 impl App {
     /// Constructs a new instance of [`App`].

@@ -6,7 +6,7 @@ use crate::{
     error::VMError,
     frame::{ExecFrame, Program},
     gc::collector::{init_collector, GCType},
-    object::{Address, Field, ObjAddr, Object},
+    object::{Field, ObjAddr, Object},
     vm::VirtualMachine,
 };
 
@@ -22,7 +22,7 @@ impl Default for Parameters {
         Parameters {
             heap_size: 1024,
             alignment: 4,
-            num_frames: 20,
+            num_frames: 300,
             probs: FramePropabilities::default(),
         }
     }
@@ -109,7 +109,7 @@ impl Simulator {
                 .fields
                 .iter()
                 .enumerate()
-                .filter(|(_, field)| !matches!(field, Field::Ref(Address::Null)))
+                .filter(|(_, field)| matches!(field, Field::Scalar(_)))
                 .map(|(idx, _)| idx)
                 .collect::<Vec<_>>();
 
@@ -159,7 +159,13 @@ impl Simulator {
                     .objects
                     .keys()
                     .cloned()
-                    .filter(|a| !ref_chain.contains(a))
+                    .filter(|a| {
+                        !ref_chain.contains(a)
+                            && self.vm.heap.objects[&a]
+                                .fields
+                                .iter()
+                                .any(|field| matches!(field, Field::Scalar(_)))
+                    })
                     .collect();
 
                 if let Some(new_obj_addr) = possible_addresses.choose(&mut rng).cloned() {
