@@ -1,6 +1,6 @@
-use std::fmt;
 use rand::Rng;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 pub type ObjAddr = usize;
 pub type Value = usize;

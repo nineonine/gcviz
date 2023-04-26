@@ -42,8 +42,12 @@ impl Heap {
         Err(VMError::SegmentationFault)
     }
 
-    pub fn visualize(&self) -> Vec<MemoryCell> {
-        let mut visualized_memory = vec![MemoryCell::free(); self.memory.len()];
+    /// Builds memory grid for visualizations
+    pub fn visualize(&self, memory: Option<&Vec<MemoryCell>>) -> Vec<MemoryCell> {
+        let mut visualized_memory = match memory {
+            Some(mem) => mem.clone(),
+            None => vec![MemoryCell::free(); self.memory.len()],
+        };
 
         for (&address, object) in &self.objects {
             let object_size = object.size();
@@ -60,6 +64,10 @@ pub struct MemoryCell {
 }
 
 impl MemoryCell {
+    pub fn new(status: CellStatus) -> Self {
+        MemoryCell { status }
+    }
+
     pub fn free() -> Self {
         MemoryCell {
             status: CellStatus::Freed,
@@ -70,6 +78,7 @@ impl MemoryCell {
 #[derive(Clone, Copy, Debug)]
 pub enum CellStatus {
     Freed,
+    ToBeFreed,
     Allocated,
     Marked,
     Used,
@@ -144,6 +153,7 @@ impl<'a> Widget for HeapGrid<'a> {
 
                 let cell_style = match cell.status {
                     CellStatus::Freed => Style::default().bg(Color::Black),
+                    CellStatus::ToBeFreed => Style::default().bg(Color::Magenta),
                     CellStatus::Allocated => Style::default().bg(Color::Green),
                     CellStatus::Marked => Style::default().bg(Color::Yellow),
                     CellStatus::Used => Style::default().bg(Color::LightGreen),
@@ -157,4 +167,22 @@ impl<'a> Widget for HeapGrid<'a> {
             }
         }
     }
+}
+
+pub fn reset_highlights(memory: &mut Vec<MemoryCell>) {
+    for cell in memory.iter_mut() {
+        match cell.status {
+            CellStatus::ToBeFreed => {
+                cell.status = CellStatus::Freed;
+            }
+            CellStatus::Used => {
+                cell.status = CellStatus::Allocated;
+            }
+            _ => {}
+        }
+    }
+}
+
+pub fn visualize_mutator(memory: &mut Vec<MemoryCell>, addr: usize) {
+    memory[addr] = MemoryCell::new(CellStatus::Used);
 }

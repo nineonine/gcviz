@@ -1,10 +1,10 @@
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use serde_json::Error as SerdeError;
 use std::env;
 use std::fs::File;
-use std::io::{self, Write, Read};
-use std::time::{UNIX_EPOCH, SystemTime};
-use serde_json::Error as SerdeError;
+use std::io::{self, Read, Write};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use gcviz::app::{App, AppResult};
 use gcviz::event::{Event, EventHandler};
@@ -66,7 +66,8 @@ fn save_program_to_file(program: &Program) -> Result<String, SerdeError> {
     let filename = format!("program_{}.json", now);
     let json_program = serde_json::to_string_pretty(program)?;
     let mut file = File::create(&filename).expect("Failed to create file");
-    file.write_all(json_program.as_bytes()).expect("Failed to write to file");
+    file.write_all(json_program.as_bytes())
+        .expect("Failed to write to file");
 
     Ok(filename)
 }
@@ -74,6 +75,7 @@ fn save_program_to_file(program: &Program) -> Result<String, SerdeError> {
 fn load_program_from_file(filename: &str) -> Result<Program, SerdeError> {
     let mut file = File::open(filename).expect("Failed to open file");
     let mut contents = String::new();
-    file.read_to_string(&mut contents).expect("Failed to read file");
+    file.read_to_string(&mut contents)
+        .expect("Failed to read file");
     serde_json::from_str(&contents)
 }

@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     gc::stats::GCStats,

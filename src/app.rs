@@ -3,7 +3,7 @@ use std::{collections::VecDeque, error};
 use crate::{
     frame::{FrameResult, Program},
     gc::collector::{init_collector, GCType},
-    heap::MemoryCell,
+    heap::{reset_highlights, visualize_mutator, MemoryCell},
     log::{Log, LogSource},
     vm::VirtualMachine,
 };
@@ -29,7 +29,7 @@ impl App {
     /// Constructs a new instance of [`App`].
     pub fn new(alignment: usize, heap_size: usize, gc_ty: &GCType, program: Program) -> Self {
         let vm = VirtualMachine::new(alignment, heap_size, init_collector(gc_ty));
-        let memviz = vm.heap.visualize();
+        let memviz = vm.heap.visualize(None);
         Self {
             running: true,
             vm,
@@ -50,6 +50,7 @@ impl App {
 
     /// Handles the tick event of the terminal.
     pub fn tick(&mut self) {
+        reset_highlights(&mut self.memviz);
         if let Some(frame) = self.program.pop_front() {
             match self.vm.tick(frame) {
                 Ok(frame_result) => {
@@ -60,6 +61,7 @@ impl App {
                                 LogSource::ALLOC,
                                 Some(self.frame_ptr),
                             ));
+                            self.memviz = self.vm.heap.visualize(Some(&mut self.memviz));
                         }
                         FrameResult::ReadResult(addr, result) => {
                             self.enqueue_log(Log::new(
@@ -67,6 +69,7 @@ impl App {
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
+                            visualize_mutator(&mut self.memviz, addr);
                         }
                         FrameResult::WriteResult(addr, value) => {
                             self.enqueue_log(Log::new(
@@ -74,6 +77,7 @@ impl App {
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
+                            visualize_mutator(&mut self.memviz, addr);
                         }
                         FrameResult::GCResult(stats) => {
                             self.enqueue_log(Log::new(
@@ -84,7 +88,6 @@ impl App {
                         }
                     }
                     self.frame_ptr += 1;
-                    self.memviz = self.vm.heap.visualize();
                 }
                 Err(e) => {
                     self.enqueue_log(Log::new(

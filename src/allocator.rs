@@ -17,20 +17,20 @@ impl Allocator {
         // Compute the required size based on the object's fields and alignment
         let size = object.size();
 
-        let free_block_index = heap
-            .free_list
-            .iter()
-            .enumerate()
-            .find_map(|(index, &(block_start, block_size))| {
-                let aligned_start = self.aligned_position(block_start);
-                let aligned_end = aligned_start + size;
+        let free_block_index =
+            heap.free_list
+                .iter()
+                .enumerate()
+                .find_map(|(index, &(block_start, block_size))| {
+                    let aligned_start = self.aligned_position(block_start);
+                    let aligned_end = aligned_start + size;
 
-                if aligned_end <= block_start + block_size {
-                    Some((index, block_start, aligned_start, aligned_end))
-                } else {
-                    None
-                }
-            });
+                    if aligned_end <= block_start + block_size {
+                        Some((index, block_start, aligned_start, aligned_end))
+                    } else {
+                        None
+                    }
+                });
 
         if let Some((index, block_start, aligned_start, aligned_end)) = free_block_index {
             let (_, block_size) = heap.free_list.remove(index);
@@ -59,7 +59,6 @@ impl Allocator {
             Err(VMError::AllocationError)
         }
     }
-
 
     fn aligned_position(&self, position: usize) -> usize {
         let remainder = position % self.alignment;
