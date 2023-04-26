@@ -1,11 +1,11 @@
 use std::fmt;
-
 use rand::Rng;
+use serde::{Serialize, Deserialize};
 
 pub type ObjAddr = usize;
 pub type Value = usize;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Object {
     #[allow(dead_code)]
     header: ObjHeader,
@@ -57,10 +57,10 @@ impl fmt::Display for Object {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct ObjHeader {}
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Field {
     Ref(Address),
     Scalar(Value),
@@ -75,7 +75,7 @@ impl fmt::Display for Field {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Address {
     Ptr(ObjAddr),
     Null,

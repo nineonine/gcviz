@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use serde::{Serialize, Deserialize};
+
 use crate::{
     gc::stats::GCStats,
     object::{ObjAddr, Object, Value},
@@ -7,7 +9,7 @@ use crate::{
 
 pub type Program = VecDeque<ExecFrame>;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ExecFrame {
     Allocate(Object),
     Read(ObjAddr),

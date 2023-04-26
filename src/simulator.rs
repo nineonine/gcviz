@@ -22,7 +22,7 @@ impl Default for Parameters {
         Parameters {
             heap_size: 1024,
             alignment: 4,
-            num_frames: 300,
+            num_frames: 100,
             probs: FramePropabilities::default(),
         }
     }

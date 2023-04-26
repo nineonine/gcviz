@@ -20,29 +20,53 @@ impl Allocator {
         let free_block_index = heap
             .free_list
             .iter()
-            .position(|&(_, block_size)| block_size >= size);
+            .enumerate()
+            .find_map(|(index, &(block_start, block_size))| {
+                let aligned_start = self.aligned_position(block_start);
+                let aligned_end = aligned_start + size;
 
-        if let Some(index) = free_block_index {
-            let (block_start, block_size) = heap.free_list.remove(index);
-            let remaining_size = block_size - size;
+                if aligned_end <= block_start + block_size {
+                    Some((index, block_start, aligned_start, aligned_end))
+                } else {
+                    None
+                }
+            });
 
-            if remaining_size > 0 {
-                let new_free_block_start = block_start + size;
-                heap.free_list.push((new_free_block_start, remaining_size));
+        if let Some((index, block_start, aligned_start, aligned_end)) = free_block_index {
+            let (_, block_size) = heap.free_list.remove(index);
+            let remaining_size_before = aligned_start - block_start;
+            let remaining_size_after = block_start + block_size - aligned_end;
+
+            if remaining_size_before > 0 {
+                heap.free_list.push((block_start, remaining_size_before));
+            }
+
+            if remaining_size_after > 0 {
+                heap.free_list.push((aligned_end, remaining_size_after));
             }
 
             // Store the object in the memory
-            heap.objects.insert(block_start, object);
-            for cell in &mut heap.memory[block_start..block_start + size] {
+            heap.objects.insert(aligned_start, object);
+            for cell in &mut heap.memory[aligned_start..aligned_end] {
                 cell.status = CellStatus::Allocated;
             }
 
             // Add the object to the roots
-            heap.roots.insert(block_start);
+            heap.roots.insert(aligned_start);
 
-            Ok(block_start)
+            Ok(aligned_start)
         } else {
             Err(VMError::AllocationError)
+        }
+    }
+
+
+    fn aligned_position(&self, position: usize) -> usize {
+        let remainder = position % self.alignment;
+        if remainder == 0 {
+            position
+        } else {
+            position + self.alignment - remainder
         }
     }
 }
