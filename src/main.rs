@@ -13,7 +13,7 @@ fn main() -> AppResult<()> {
     let gc_type = GCType::MarkSweep;
     let mut sim = Simulator::new(Parameters::default(), &gc_type);
     let program = sim.gen_program();
-    let mut app = App::new(0, 1024, &gc_type, program);
+    let mut app = App::new(4, 1024, &gc_type, program);
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());

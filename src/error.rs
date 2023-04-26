@@ -2,6 +2,6 @@
 pub enum VMError {
     AllocationError,
     SegmentationFault,
-    NullPointerException,
+    NullPointerException(String),
     GCError,
 }

@@ -1,3 +1,5 @@
+use std::fmt;
+
 use rand::Rng;
 
 pub type ObjAddr = usize;
@@ -40,6 +42,21 @@ impl Object {
     }
 }
 
+impl fmt::Display for Object {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Object [size: {}] [", self.size())?;
+
+        for (i, field) in self.fields.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{field}")?;
+        }
+
+        write!(f, "]")
+    }
+}
+
 #[derive(Clone, Debug)]
 struct ObjHeader {}
 
@@ -49,8 +66,26 @@ pub enum Field {
     Scalar(Value),
 }
 
+impl fmt::Display for Field {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Field::Ref(addr) => write!(f, "({addr})"),
+            Field::Scalar(value) => write!(f, "{value}"),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Address {
     Ptr(ObjAddr),
     Null,
+}
+
+impl fmt::Display for Address {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Address::Ptr(addr) => write!(f, "{addr}"),
+            Address::Null => write!(f, "Null"),
+        }
+    }
 }

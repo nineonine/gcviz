@@ -1,4 +1,4 @@
-use std::error;
+use std::{collections::VecDeque, error};
 
 use crate::{
     frame::{FrameResult, Program},
@@ -17,10 +17,13 @@ pub struct App {
     pub running: bool,
     pub program: Program,
     pub frame_ptr: usize,
-    pub logs: Vec<Log>,
+    pub logs: VecDeque<Log>,
+    pub log_capacity: usize,
     pub vm: VirtualMachine,
     pub memviz: Vec<MemoryCell>,
 }
+
+static LOG_CAPACITY: usize = 21;
 
 impl App {
     /// Constructs a new instance of [`App`].
@@ -30,11 +33,19 @@ impl App {
         Self {
             running: true,
             vm,
-            logs: vec![],
+            logs: VecDeque::with_capacity(LOG_CAPACITY),
+            log_capacity: LOG_CAPACITY,
             memviz,
             program,
             frame_ptr: 0,
         }
+    }
+
+    fn enqueue_log(&mut self, log: Log) {
+        if self.logs.len() == self.log_capacity {
+            self.logs.pop_front();
+        }
+        self.logs.push_back(log);
     }
 
     /// Handles the tick event of the terminal.
@@ -44,28 +55,28 @@ impl App {
                 Ok(frame_result) => {
                     match frame_result {
                         FrameResult::AllocResult(object, addr) => {
-                            self.logs.push(Log::new(
-                                format!("Allocated Object {object:?} at 0x{addr:X}"),
+                            self.enqueue_log(Log::new(
+                                format!("{object} at 0x{addr:X}"),
                                 LogSource::ALLOC,
                                 Some(self.frame_ptr),
                             ));
                         }
                         FrameResult::ReadResult(addr, result) => {
-                            self.logs.push(Log::new(
-                                format!("Read value from 0x{addr}. Value: 0x{result:X}"),
+                            self.enqueue_log(Log::new(
+                                format!("Read value from 0x{addr:X}. Value: {result}"),
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
                         }
                         FrameResult::WriteResult(addr, value) => {
-                            self.logs.push(Log::new(
-                                format!("Write value 0x{value:X} at address 0x{addr:X}"),
+                            self.enqueue_log(Log::new(
+                                format!("Write value {value:} to 0x{addr:X}"),
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
                         }
                         FrameResult::GCResult(stats) => {
-                            self.logs.push(Log::new(
+                            self.enqueue_log(Log::new(
                                 format!("Collect garbage. Stats: {stats:?}"),
                                 LogSource::GC,
                                 Some(self.frame_ptr),
@@ -76,8 +87,8 @@ impl App {
                     self.memviz = self.vm.heap.visualize();
                 }
                 Err(e) => {
-                    self.logs.push(Log::new(
-                        format!("*** ERROR: {e:?}"),
+                    self.enqueue_log(Log::new(
+                        format!("{e:?}"),
                         LogSource::ERROR,
                         Some(self.frame_ptr),
                     ));

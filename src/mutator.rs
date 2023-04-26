@@ -35,7 +35,9 @@ impl Mutator {
         match field {
             Field::Ref(addr) => match addr {
                 Address::Ptr(a) => self.read(heap, *a),
-                Address::Null => Err(VMError::NullPointerException),
+                Address::Null => Err(VMError::NullPointerException(format!(
+                    "Attempted to dereference NULL address at 0x{address:X}",
+                ))),
             },
             Field::Scalar(value) => Ok(*value),
         }

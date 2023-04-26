@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom, Rng};
 
@@ -6,7 +6,7 @@ use crate::{
     error::VMError,
     frame::{ExecFrame, Program},
     gc::collector::{init_collector, GCType},
-    object::{ObjAddr, Object},
+    object::{Address, Field, ObjAddr, Object},
     vm::VirtualMachine,
 };
 
@@ -21,8 +21,8 @@ impl Default for Parameters {
     fn default() -> Self {
         Parameters {
             heap_size: 1024,
-            alignment: 0,
-            num_frames: 100,
+            alignment: 4,
+            num_frames: 20,
             probs: FramePropabilities::default(),
         }
     }
@@ -105,8 +105,21 @@ impl Simulator {
         let mut rng = rand::thread_rng();
         if let Some(obj_addr) = self.random_object_address() {
             let object = &self.vm.heap.objects[&obj_addr];
-            let field_offset = rng.gen_range(0..object.fields.len());
-            ExecFrame::Read(obj_addr + field_offset)
+            let valid_indexes = object
+                .fields
+                .iter()
+                .enumerate()
+                .filter(|(_, field)| !matches!(field, Field::Ref(Address::Null)))
+                .map(|(idx, _)| idx)
+                .collect::<Vec<_>>();
+
+            if valid_indexes.is_empty() {
+                // If there are no valid fields to read, just allocate
+                self.gen_allocate()
+            } else {
+                let field_offset = valid_indexes.choose(&mut rng).unwrap();
+                ExecFrame::Read(obj_addr + field_offset)
+            }
         } else {
             // If there are no objects in the heap, just allocate
             self.gen_allocate()
@@ -139,7 +152,22 @@ impl Simulator {
                 rng.gen_range(0..9)
             } else {
                 // Write a pointer to another object with probability `prob_write_pointer`
-                self.random_object_address().unwrap()
+                let ref_chain = self.reference_chain(obj_addr);
+                let possible_addresses: Vec<ObjAddr> = self
+                    .vm
+                    .heap
+                    .objects
+                    .keys()
+                    .cloned()
+                    .filter(|a| !ref_chain.contains(a))
+                    .collect();
+
+                if let Some(new_obj_addr) = possible_addresses.choose(&mut rng).cloned() {
+                    new_obj_addr
+                } else {
+                    // No valid object address found, allocate a new object instead
+                    return self.gen_allocate();
+                }
             };
 
             match self.vm.mutator.write(&mut self.vm.heap, address, value) {
@@ -165,5 +193,30 @@ impl Simulator {
             .collect::<Vec<_>>()
             .choose(&mut rng)
             .cloned()
+    }
+
+    fn reference_chain(&self, addr: ObjAddr) -> HashSet<ObjAddr> {
+        let mut chain = HashSet::new();
+        let mut current_addr = Some(addr);
+
+        while let Some(address) = current_addr {
+            if chain.insert(address) {
+                match self.vm.mutator.read(&self.vm.heap, address) {
+                    Ok(value) => {
+                        if self.vm.heap.objects.contains_key(&value) {
+                            current_addr = Some(value);
+                        } else {
+                            current_addr = None;
+                        }
+                    }
+                    Err(_) => current_addr = None,
+                }
+            } else {
+                // Circular reference detected, stop
+                break;
+            }
+        }
+
+        chain
     }
 }
