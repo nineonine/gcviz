@@ -1,7 +1,8 @@
 use gcviz::app::{App, AppResult};
 use gcviz::event::{Event, EventHandler};
-use gcviz::gc::mark_sweep::MarkSweep;
+use gcviz::gc::collector::GCType;
 use gcviz::handler::handle_key_events;
+use gcviz::simulator::{Parameters, Simulator};
 use gcviz::tui::Tui;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
@@ -9,13 +10,15 @@ use std::io;
 
 fn main() -> AppResult<()> {
     // Create an application.
-    let gc = MarkSweep::new();
-    let mut app = App::new(1024, 4, Box::new(gc));
+    let gc_type = GCType::MarkSweep;
+    let mut sim = Simulator::new(Parameters::default(), &gc_type);
+    let program = sim.gen_program();
+    let mut app = App::new(0, 1024, &gc_type, program);
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(250);
+    let events = EventHandler::new(100);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
 

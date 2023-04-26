@@ -58,18 +58,14 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
     let logs: Vec<ListItem> = app
         .logs
         .iter()
-        .rev()
-        .map(|&(event, level)| {
-            let s = match level {
-                "CRITICAL" => Style::default().fg(Color::Red),
-                "ERROR" => Style::default().fg(Color::Magenta),
-                "WARNING" => Style::default().fg(Color::Yellow),
-                "INFO" => Style::default().fg(Color::Blue),
-                _ => Style::default(),
-            };
+        .map(|log| {
+            let s = log.style();
             ListItem::new(vec![
                 Spans::from("-".repeat(chunks[1].width as usize)),
-                Spans::from(vec![Span::styled(format!("{level} {event}"), s)]),
+                Spans::from(vec![Span::styled(
+                    format!("{:?} {}", log.source, log.msg),
+                    s,
+                )]),
             ])
         })
         .collect();

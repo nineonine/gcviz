@@ -41,6 +41,17 @@ impl Heap {
         }
         Err(VMError::SegmentationFault)
     }
+
+    pub fn visualize(&self) -> Vec<MemoryCell> {
+        let mut visualized_memory = vec![MemoryCell::free(); self.memory.len()];
+
+        for (&address, object) in &self.objects {
+            let object_size = object.size();
+            visualized_memory[address..(object_size + address)]
+                .copy_from_slice(&self.memory[address..(object_size + address)]);
+        }
+        visualized_memory
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

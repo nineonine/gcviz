@@ -3,7 +3,7 @@ use rand::Rng;
 pub type ObjAddr = usize;
 pub type Value = usize;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Object {
     #[allow(dead_code)]
     header: ObjHeader,
@@ -40,16 +40,16 @@ impl Object {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct ObjHeader {}
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Field {
     Ref(Address),
     Scalar(Value),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Address {
     Ptr(ObjAddr),
     Null,

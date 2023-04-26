@@ -1,9 +1,11 @@
+use std::collections::VecDeque;
+
 use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom, Rng};
 
 use crate::{
-    ast::{ExecFrame, Program},
     error::VMError,
-    gc::collector::GarbageCollector,
+    frame::{ExecFrame, Program},
+    gc::collector::{init_collector, GCType},
     object::{ObjAddr, Object},
     vm::VirtualMachine,
 };
@@ -19,7 +21,7 @@ impl Default for Parameters {
     fn default() -> Self {
         Parameters {
             heap_size: 1024,
-            alignment: 4,
+            alignment: 0,
             num_frames: 100,
             probs: FramePropabilities::default(),
         }
@@ -38,48 +40,48 @@ pub struct FramePropabilities {
 impl Default for FramePropabilities {
     fn default() -> Self {
         FramePropabilities {
-            prob_alloc: 0.5,
+            prob_alloc: 0.55,
             prob_read: 0.2,
             prob_write: 0.2,
-            prob_gc: 0.1,
+            prob_gc: 0.05,
             prob_write_scalar: 0.5,
             prob_write_pointer: 0.5,
         }
     }
 }
 
-pub struct ProgramGenerator {
+pub struct Simulator {
     vm: VirtualMachine,
-    params: Parameters,
+    pub params: Parameters,
 }
 
-impl ProgramGenerator {
-    pub fn new(params: Parameters, gc: Box<dyn GarbageCollector>) -> ProgramGenerator {
-        ProgramGenerator {
-            vm: VirtualMachine::new(params.alignment, params.heap_size, gc),
+impl Simulator {
+    pub fn new(params: Parameters, gc_ty: &GCType) -> Simulator {
+        Simulator {
+            vm: VirtualMachine::new(params.alignment, params.heap_size, init_collector(gc_ty)),
             params,
         }
     }
 
-    pub fn gen_program(&mut self, params: Parameters) -> Program {
-        let mut program = Vec::new();
+    pub fn gen_program(&mut self) -> Program {
+        let mut program = VecDeque::new();
         let mut rng = rand::thread_rng();
 
         let weights = [
-            params.probs.prob_alloc,
-            params.probs.prob_read,
-            params.probs.prob_write,
-            params.probs.prob_gc,
+            self.params.probs.prob_alloc,
+            self.params.probs.prob_read,
+            self.params.probs.prob_write,
+            self.params.probs.prob_gc,
         ];
         let dist = WeightedIndex::new(&weights).unwrap();
-        for _ in 0..params.num_frames {
+        for _ in 0..self.params.num_frames {
             let frame = match dist.sample(&mut rng) {
                 0 => self.gen_allocate(),
                 1 => self.gen_read(),
                 2 => self.gen_write(),
                 _ => ExecFrame::GC,
             };
-            program.push(frame);
+            program.push_back(frame);
         }
 
         program
