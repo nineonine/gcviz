@@ -1,4 +1,4 @@
-use crate::gc::collector::GarbageCollector;
+use crate::gc::GarbageCollector;
 use crate::{allocator::Allocator, heap::Heap, mutator::Mutator};
 use crate::{
     error::VMError,

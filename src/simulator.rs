@@ -5,7 +5,7 @@ use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom
 use crate::{
     error::VMError,
     frame::{ExecFrame, Program},
-    gc::collector::{init_collector, GCType},
+    gc::{init_collector, GCType},
     object::{Field, ObjAddr, Object},
     vm::VirtualMachine,
 };

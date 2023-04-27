@@ -2,7 +2,7 @@ use std::{collections::VecDeque, error};
 
 use crate::{
     frame::{FrameResult, Program},
-    gc::collector::{init_collector, GCType},
+    gc::{init_collector, GCType},
     heap::{reset_highlights, visualize_mutator, MemoryCell},
     log::{Log, LogSource, LOG_CAPACITY},
     vm::VirtualMachine,
@@ -16,6 +16,7 @@ pub struct App {
     /// Is the application running?
     pub running: bool,
     pub program: Program,
+    pub program_paused: bool,
     pub frame_ptr: usize,
     pub logs: VecDeque<Log>,
     pub log_capacity: usize,
@@ -30,11 +31,12 @@ impl App {
         let memviz = vm.heap.visualize(None);
         Self {
             running: true,
+            program,
+            program_paused: false,
             vm,
             logs: VecDeque::with_capacity(LOG_CAPACITY),
             log_capacity: LOG_CAPACITY,
             memviz,
-            program,
             frame_ptr: 0,
         }
     }
@@ -48,6 +50,9 @@ impl App {
 
     /// Handles the tick event of the terminal.
     pub fn tick(&mut self) {
+        if self.program_paused {
+            return;
+        }
         reset_highlights(&mut self.memviz);
         if let Some(frame) = self.program.pop_front() {
             match self.vm.tick(frame) {

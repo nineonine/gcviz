@@ -11,34 +11,28 @@ use crate::{app::App, heap::HeapGrid};
 
 /// Renders the user interface widgets.
 pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
-    f.render_widget(
-        Paragraph::new("Press `Esc`, `Ctrl-C` or `q` to quit.".to_string())
-            .block(
-                Block::default()
-                    .title("Garbage Collection Visualization Environment")
-                    .title_alignment(Alignment::Center)
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
-            )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-            .alignment(Alignment::Center),
-        f.size(),
-    );
-
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
             [
                 Constraint::Percentage(10),
-                Constraint::Percentage(80),
-                Constraint::Percentage(10),
+                Constraint::Percentage(85),
+                Constraint::Percentage(5),
             ]
             .as_ref(),
         )
         .split(f.size());
 
-    let block = Block::default().title("Header").borders(Borders::ALL);
-    f.render_widget(block, chunks[0]);
+    let hdr = Paragraph::new("Press `Esc`, `Ctrl-C` or `q` to quit.".to_string())
+        .block(
+            Block::default()
+                .title("Garbage Collection Visualization Environment")
+                .title_alignment(Alignment::Center)
+                .borders(Borders::ALL),
+        )
+        .style(Style::default().bg(Color::Black))
+        .alignment(Alignment::Center);
+    f.render_widget(hdr, chunks[0]);
 
     let inner_chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -90,6 +84,58 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
     let memory_grid = HeapGrid::new(app.memviz.clone());
     f.render_widget(memory_grid, inner_chunks[1]);
 
-    let block = Block::default().title("Footer").borders(Borders::ALL);
-    f.render_widget(block, chunks[2]);
+    let footer_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage(25),
+                Constraint::Percentage(25),
+                Constraint::Percentage(25),
+                Constraint::Percentage(25),
+            ]
+            .as_ref(),
+        )
+        .split(chunks[2]);
+
+    let run_pause_text = if app.program_paused { "Run" } else { "Pause" };
+    let run_pause_button = Paragraph::new(run_pause_text.to_string())
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().bg(Color::Black))
+        .alignment(Alignment::Center);
+
+    let next_button = Paragraph::new("Next")
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().bg(Color::Black))
+        .alignment(Alignment::Center);
+
+    let restart_button = Paragraph::new("Restart")
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().bg(Color::Black))
+        .alignment(Alignment::Center);
+
+    let quit_button = Paragraph::new("Quit")
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().bg(Color::Black))
+        .alignment(Alignment::Center);
+
+    f.render_widget(run_pause_button, footer_chunks[0]);
+    f.render_widget(next_button, footer_chunks[1]);
+    f.render_widget(restart_button, footer_chunks[2]);
+    f.render_widget(quit_button, footer_chunks[3]);
 }

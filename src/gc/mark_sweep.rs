@@ -1,6 +1,9 @@
 use crate::error::VMError;
 
-use super::{collector::GarbageCollector, stats::GCStats};
+use super::{
+    stats::GCStats,
+    {GCType, GarbageCollector},
+};
 
 pub struct MarkSweep {}
 
@@ -19,5 +22,9 @@ impl MarkSweep {
 impl GarbageCollector for MarkSweep {
     fn collect(&self) -> Result<GCStats, VMError> {
         Ok(GCStats::new())
+    }
+
+    fn ty(&self) -> GCType {
+        GCType::MarkSweep
     }
 }

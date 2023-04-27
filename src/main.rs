@@ -9,7 +9,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use gcviz::app::{App, AppResult};
 use gcviz::event::{Event, EventHandler};
 use gcviz::frame::Program;
-use gcviz::gc::collector::GCType;
+use gcviz::gc::GCType;
 use gcviz::handler::handle_key_events;
 use gcviz::simulator::{Parameters, Simulator};
 use gcviz::tui::Tui;

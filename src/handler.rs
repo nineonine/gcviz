@@ -8,6 +8,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Esc | KeyCode::Char('q') => {
             app.quit();
         }
+        KeyCode::Char(' ') => {
+            app.program_paused = !app.program_paused;
+        }
         // Exit application on `Ctrl-C`
         KeyCode::Char('c') | KeyCode::Char('C') => {
             if key_event.modifiers == KeyModifiers::CONTROL {
