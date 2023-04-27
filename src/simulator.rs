@@ -28,6 +28,15 @@ impl Default for Parameters {
     }
 }
 
+impl Parameters {
+    pub fn new(num_frames: usize) -> Self {
+        Parameters {
+            num_frames,
+            ..Default::default()
+        }
+    }
+}
+
 pub struct FramePropabilities {
     prob_alloc: f32,
     prob_read: f32,
@@ -161,7 +170,7 @@ impl Simulator {
                     .cloned()
                     .filter(|a| {
                         !ref_chain.contains(a)
-                            && self.vm.heap.objects[&a]
+                            && self.vm.heap.objects[a]
                                 .fields
                                 .iter()
                                 .any(|field| matches!(field, Field::Scalar(_)))

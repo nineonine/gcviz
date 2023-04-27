@@ -4,7 +4,7 @@ use crate::{
     frame::{FrameResult, Program},
     gc::collector::{init_collector, GCType},
     heap::{reset_highlights, visualize_mutator, MemoryCell},
-    log::{Log, LogSource},
+    log::{Log, LogSource, LOG_CAPACITY},
     vm::VirtualMachine,
 };
 
@@ -22,8 +22,6 @@ pub struct App {
     pub vm: VirtualMachine,
     pub memviz: Vec<MemoryCell>,
 }
-
-static LOG_CAPACITY: usize = 30;
 
 impl App {
     /// Constructs a new instance of [`App`].
@@ -61,7 +59,7 @@ impl App {
                                 LogSource::ALLOC,
                                 Some(self.frame_ptr),
                             ));
-                            self.memviz = self.vm.heap.visualize(Some(&mut self.memviz));
+                            self.memviz = self.vm.heap.visualize(Some(&self.memviz));
                         }
                         FrameResult::ReadResult(addr, result) => {
                             self.enqueue_log(Log::new(

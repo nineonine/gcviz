@@ -156,7 +156,7 @@ impl<'a> Widget for HeapGrid<'a> {
                     CellStatus::ToBeFreed => Style::default().bg(Color::Magenta),
                     CellStatus::Allocated => Style::default().bg(Color::Green),
                     CellStatus::Marked => Style::default().bg(Color::Yellow),
-                    CellStatus::Used => Style::default().bg(Color::LightGreen),
+                    CellStatus::Used => Style::default().bg(Color::White),
                 };
 
                 for y in cell_rect.top()..cell_rect.bottom() {
@@ -169,7 +169,7 @@ impl<'a> Widget for HeapGrid<'a> {
     }
 }
 
-pub fn reset_highlights(memory: &mut Vec<MemoryCell>) {
+pub fn reset_highlights(memory: &mut [MemoryCell]) {
     for cell in memory.iter_mut() {
         match cell.status {
             CellStatus::ToBeFreed => {
@@ -183,6 +183,6 @@ pub fn reset_highlights(memory: &mut Vec<MemoryCell>) {
     }
 }
 
-pub fn visualize_mutator(memory: &mut Vec<MemoryCell>, addr: usize) {
+pub fn visualize_mutator(memory: &mut [MemoryCell], addr: usize) {
     memory[addr] = MemoryCell::new(CellStatus::Used);
 }

@@ -14,6 +14,9 @@ use gcviz::handler::handle_key_events;
 use gcviz::simulator::{Parameters, Simulator};
 use gcviz::tui::Tui;
 
+static TICK_RATE: u64 = 100;
+static NUM_FRAMES: usize = 100;
+
 fn main() -> AppResult<()> {
     // Check command line arguments for a program file name.
     let args: Vec<String> = env::args().collect();
@@ -22,7 +25,7 @@ fn main() -> AppResult<()> {
     let program: Program = if args.len() > 1 {
         load_program_from_file(&args[1])?
     } else {
-        let mut sim = Simulator::new(Parameters::default(), &gc_type);
+        let mut sim = Simulator::new(Parameters::new(NUM_FRAMES), &gc_type);
         let program = sim.gen_program();
         // match save_program_to_file(&program) {
         //     Ok(filename) => println!("Program saved to {}", filename),
@@ -36,7 +39,7 @@ fn main() -> AppResult<()> {
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(100);
+    let events = EventHandler::new(TICK_RATE);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
 
@@ -63,7 +66,7 @@ fn save_program_to_file(program: &Program) -> Result<String, SerdeError> {
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
         .as_secs();
-    let filename = format!("program_{}.json", now);
+    let filename = format!("program_{now}.json");
     let json_program = serde_json::to_string_pretty(program)?;
     let mut file = File::create(&filename).expect("Failed to create file");
     file.write_all(json_program.as_bytes())

@@ -1,5 +1,7 @@
 use ratatui::style::{Color, Style};
 
+pub static LOG_CAPACITY: usize = 1 << 4;
+
 #[derive(Debug, Clone)]
 pub struct Log {
     pub msg: String,
