@@ -11,6 +11,11 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Char(' ') => {
             app.program_paused = !app.program_paused;
         }
+        KeyCode::Char('n') | KeyCode::Char('N') => {
+            if app.program_paused {
+                app.eval_next_frame = true;
+            }
+        }
         // Exit application on `Ctrl-C`
         KeyCode::Char('c') | KeyCode::Char('C') => {
             if key_event.modifiers == KeyModifiers::CONTROL {

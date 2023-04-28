@@ -17,6 +17,7 @@ pub struct App {
     pub running: bool,
     pub program: Program,
     pub program_paused: bool,
+    pub eval_next_frame: bool,
     pub frame_ptr: usize,
     pub logs: VecDeque<Log>,
     pub log_capacity: usize,
@@ -33,6 +34,7 @@ impl App {
             running: true,
             program,
             program_paused: false,
+            eval_next_frame: false,
             vm,
             logs: VecDeque::with_capacity(LOG_CAPACITY),
             log_capacity: LOG_CAPACITY,
@@ -50,7 +52,7 @@ impl App {
 
     /// Handles the tick event of the terminal.
     pub fn tick(&mut self) {
-        if self.program_paused {
+        if self.program_paused && !self.eval_next_frame {
             return;
         }
         reset_highlights(&mut self.memviz);
@@ -101,6 +103,7 @@ impl App {
                 }
             }
         }
+        self.eval_next_frame = false;
     }
 
     /// Set running to false to quit the application.
