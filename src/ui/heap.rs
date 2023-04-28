@@ -137,7 +137,7 @@ pub fn visualize_mutator(memory: &mut [MemoryCell], addr: usize) {
 }
 
 pub fn visualize_allocation(memory: &mut [MemoryCell], addr: usize, size: usize) {
-    for i in addr..(addr + size) {
-        memory[i] = MemoryCell::new(CellStatus::Allocated);
+    for c in memory.iter_mut().skip(addr).take(size) {
+        *c = MemoryCell::new(CellStatus::Allocated);
     }
 }
