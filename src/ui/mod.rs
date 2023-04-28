@@ -7,11 +7,11 @@ use ratatui::{
 use self::heap::HeapGrid;
 use crate::app::App;
 
-mod controls;
 mod events;
 mod footer;
 mod header;
 pub mod heap;
+mod info;
 
 /// Renders the user interface widgets.
 pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
@@ -39,7 +39,7 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
         .split(inner_chunks[0]);
 
-    controls::render(app, f, left_panel[0]);
+    info::render(app, f, left_panel[0]);
     events::render(app, f, left_panel[1]);
 
     let memory_grid = HeapGrid::new(app.memviz.clone());

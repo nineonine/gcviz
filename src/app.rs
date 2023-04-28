@@ -4,6 +4,7 @@ use crate::{
     frame::{FrameResult, Program},
     gc::{init_collector, GCType},
     log::{Log, LogSource, LOG_CAPACITY},
+    simulator::Parameters,
     ui::heap::{reset_highlights, visualize_allocation, visualize_mutator, CellStatus, MemoryCell},
     vm::VirtualMachine,
 };
@@ -23,11 +24,19 @@ pub struct App {
     pub log_capacity: usize,
     pub vm: VirtualMachine,
     pub memviz: Vec<MemoryCell>,
+
+    pub sim_params: Parameters,
 }
 
 impl App {
     /// Constructs a new instance of [`App`].
-    pub fn new(alignment: usize, heap_size: usize, gc_ty: &GCType, program: Program) -> Self {
+    pub fn new(
+        alignment: usize,
+        heap_size: usize,
+        gc_ty: &GCType,
+        program: Program,
+        sim_params: Parameters,
+    ) -> Self {
         let vm = VirtualMachine::new(alignment, heap_size, init_collector(gc_ty));
         let memviz = vec![MemoryCell::free(); heap_size];
         Self {
@@ -40,6 +49,7 @@ impl App {
             log_capacity: LOG_CAPACITY,
             memviz,
             frame_ptr: 0,
+            sim_params,
         }
     }
 

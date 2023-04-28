@@ -4,6 +4,7 @@ pub mod stats;
 use self::{mark_sweep::MarkSweep, stats::GCStats};
 use crate::error::VMError;
 
+#[derive(Debug)]
 pub enum GCType {
     MarkSweep,
 }

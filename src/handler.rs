@@ -11,7 +11,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Char(' ') => {
             app.program_paused = !app.program_paused;
         }
-        KeyCode::Char('n') | KeyCode::Char('N') => {
+        KeyCode::Char('s') | KeyCode::Char('S') => {
             if app.program_paused {
                 app.eval_next_frame = true;
             }

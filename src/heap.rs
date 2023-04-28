@@ -33,4 +33,8 @@ impl Heap {
         }
         Err(VMError::SegmentationFault)
     }
+
+    pub fn free_memory(&self) -> usize {
+        self.free_list.iter().map(|(_, size)| size).sum()
+    }
 }

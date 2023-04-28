@@ -21,11 +21,12 @@ fn main() -> AppResult<()> {
     // Check command line arguments for a program file name.
     let args: Vec<String> = env::args().collect();
     // Create an application.
+    let sim_params = Parameters::new(NUM_FRAMES);
     let gc_type = GCType::MarkSweep;
     let program: Program = if args.len() > 1 {
         load_program_from_file(&args[1])?
     } else {
-        let mut sim = Simulator::new(Parameters::new(NUM_FRAMES), &gc_type);
+        let mut sim = Simulator::new(sim_params.clone(), &gc_type);
         let program = sim.gen_program();
         // match save_program_to_file(&program) {
         //     Ok(filename) => println!("Program saved to {}", filename),
@@ -34,7 +35,7 @@ fn main() -> AppResult<()> {
         program
     };
 
-    let mut app = App::new(4, 1024, &gc_type, program);
+    let mut app = App::new(4, 1024, &gc_type, program, sim_params);
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());

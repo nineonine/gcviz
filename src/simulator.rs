@@ -10,6 +10,7 @@ use crate::{
     vm::VirtualMachine,
 };
 
+#[derive(Debug, Clone)]
 pub struct Parameters {
     pub heap_size: usize,
     pub alignment: usize,
@@ -37,13 +38,14 @@ impl Parameters {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct FramePropabilities {
-    prob_alloc: f32,
-    prob_read: f32,
-    prob_write: f32,
-    prob_gc: f32,
-    prob_write_scalar: f32,
-    prob_write_pointer: f32,
+    pub prob_alloc: f32,
+    pub prob_read: f32,
+    pub prob_write: f32,
+    pub prob_gc: f32,
+    pub prob_write_scalar: f32,
+    pub prob_write_pointer: f32,
 }
 
 impl Default for FramePropabilities {

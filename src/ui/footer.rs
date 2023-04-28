@@ -56,7 +56,7 @@ fn run_pause_button(app: &App) -> Paragraph {
 }
 
 fn next_button<'a>() -> Paragraph<'a> {
-    create_button("Next", "N")
+    create_button("Step", "S")
 }
 
 fn restart_button<'a>() -> Paragraph<'a> {
