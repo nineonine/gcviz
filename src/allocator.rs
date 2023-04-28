@@ -1,6 +1,6 @@
 use crate::{
     error::VMError,
-    heap::{CellStatus, Heap},
+    heap::Heap,
     object::{ObjAddr, Object},
 };
 
@@ -45,11 +45,11 @@ impl Allocator {
                 heap.free_list.push((aligned_end, remaining_size_after));
             }
 
-            // Store the object in the memory
+            // Store the object in memory
             heap.objects.insert(aligned_start, object);
-            for cell in &mut heap.memory[aligned_start..aligned_end] {
-                cell.status = CellStatus::Allocated;
-            }
+            // for cell in &mut heap.memory[aligned_start..aligned_end] {
+            //     cell.status = CellStatus::Allocated;
+            // }
 
             // Add the object to the roots
             heap.roots.insert(aligned_start);

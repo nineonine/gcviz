@@ -3,8 +3,8 @@ use std::{collections::VecDeque, error};
 use crate::{
     frame::{FrameResult, Program},
     gc::{init_collector, GCType},
-    heap::{reset_highlights, visualize_mutator, MemoryCell},
     log::{Log, LogSource, LOG_CAPACITY},
+    ui::heap::{reset_highlights, visualize_allocation, visualize_mutator, MemoryCell},
     vm::VirtualMachine,
 };
 
@@ -28,7 +28,7 @@ impl App {
     /// Constructs a new instance of [`App`].
     pub fn new(alignment: usize, heap_size: usize, gc_ty: &GCType, program: Program) -> Self {
         let vm = VirtualMachine::new(alignment, heap_size, init_collector(gc_ty));
-        let memviz = vm.heap.visualize(None);
+        let memviz = vec![MemoryCell::free(); heap_size];
         Self {
             running: true,
             program,
@@ -64,7 +64,7 @@ impl App {
                                 LogSource::ALLOC,
                                 Some(self.frame_ptr),
                             ));
-                            self.memviz = self.vm.heap.visualize(Some(&self.memviz));
+                            visualize_allocation(&mut self.memviz, addr, object.size());
                         }
                         FrameResult::ReadResult(addr, result) => {
                             self.enqueue_log(Log::new(
