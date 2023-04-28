@@ -16,6 +16,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.eval_next_frame = true;
             }
         }
+        KeyCode::Char('r') | KeyCode::Char('R') => {
+            app.restart();
+        }
         // Exit application on `Ctrl-C`
         KeyCode::Char('c') | KeyCode::Char('C') => {
             if key_event.modifiers == KeyModifiers::CONTROL {

@@ -17,4 +17,5 @@ pub fn init_collector(gc_ty: &GCType) -> Box<dyn GarbageCollector> {
 pub trait GarbageCollector {
     fn collect(&self) -> Result<GCStats, VMError>;
     fn ty(&self) -> GCType;
+    fn new_instance(&self) -> Box<dyn GarbageCollector>;
 }

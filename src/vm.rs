@@ -25,7 +25,7 @@ impl VirtualMachine {
         }
     }
 
-    pub fn tick(&mut self, frame: ExecFrame) -> Result<FrameResult, VMError> {
+    pub fn tick(&mut self, frame: &ExecFrame) -> Result<FrameResult, VMError> {
         match frame {
             Allocate(obj) => self
                 .allocator
@@ -33,12 +33,12 @@ impl VirtualMachine {
                 .map(|addr| FrameResult::AllocResult(obj.clone(), addr)),
             Read(addr) => self
                 .mutator
-                .read(&self.heap, addr)
-                .map(|res| FrameResult::ReadResult(addr, res)),
+                .read(&self.heap, *addr)
+                .map(|res| FrameResult::ReadResult(*addr, res)),
             Write(addr, value) => self
                 .mutator
-                .write(&mut self.heap, addr, value)
-                .map(|()| FrameResult::WriteResult(addr, value)),
+                .write(&mut self.heap, *addr, *value)
+                .map(|()| FrameResult::WriteResult(*addr, *value)),
             GC => self.collector.collect().map(FrameResult::GCResult),
         }
     }

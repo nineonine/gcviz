@@ -4,7 +4,7 @@ use crate::{
     frame::{FrameResult, Program},
     gc::{init_collector, GCType},
     log::{Log, LogSource, LOG_CAPACITY},
-    ui::heap::{reset_highlights, visualize_allocation, visualize_mutator, MemoryCell},
+    ui::heap::{reset_highlights, visualize_allocation, visualize_mutator, CellStatus, MemoryCell},
     vm::VirtualMachine,
 };
 
@@ -56,7 +56,7 @@ impl App {
             return;
         }
         reset_highlights(&mut self.memviz);
-        if let Some(frame) = self.program.pop_front() {
+        if let Some(frame) = self.program.get(self.frame_ptr) {
             match self.vm.tick(frame) {
                 Ok(frame_result) => {
                     match frame_result {
@@ -109,5 +109,25 @@ impl App {
     /// Set running to false to quit the application.
     pub fn quit(&mut self) {
         self.running = false;
+    }
+
+    pub fn restart(&mut self) {
+        // Reset the state of the application
+        self.frame_ptr = 0;
+        self.logs.clear();
+        self.enqueue_log(Log::new(
+            "Program restarted".to_string(),
+            LogSource::VM,
+            Some(self.frame_ptr),
+        ));
+        self.memviz = vec![MemoryCell::new(CellStatus::Freed); self.memviz.len()];
+
+        // Reinitialize the VM
+        let new_collector = self.vm.collector.new_instance();
+        self.vm = VirtualMachine::new(
+            self.vm.allocator.alignment,
+            self.vm.heap.memory.len(),
+            new_collector,
+        );
     }
 }

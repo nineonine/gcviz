@@ -27,4 +27,8 @@ impl GarbageCollector for MarkSweep {
     fn ty(&self) -> GCType {
         GCType::MarkSweep
     }
+
+    fn new_instance(&self) -> Box<dyn GarbageCollector> {
+        Box::new(MarkSweep::new())
+    }
 }
