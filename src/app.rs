@@ -126,7 +126,7 @@ impl App {
         self.frame_ptr = 0;
         self.logs.clear();
         self.enqueue_log(Log::new(
-            "Program restarted".to_string(),
+            "Program restarted. Hit 'space' to run.".to_string(),
             LogSource::VM,
             Some(self.frame_ptr),
         ));
