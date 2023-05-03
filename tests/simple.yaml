@@ -1,0 +1,6 @@
+- !Allocate
+  header: {}
+  fields:
+    - !Scalar 5
+    - !Scalar 5
+    - !Scalar 5

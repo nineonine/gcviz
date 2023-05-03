@@ -19,12 +19,12 @@ lazy_static! {
 }
 
 fn load_program(file_name: &str) -> Program {
-    let path = format!("{}/tests/{file_name}.json", CURRENT_DIR.display());
+    let path = format!("{}/tests/{file_name}.yaml", CURRENT_DIR.display());
     load_program_from_file(path.as_str()).unwrap()
 }
 
 fn load_heap_snapshot(file_name: &str) -> Heap {
-    let path = format!("{}/tests/{file_name}_snapshot.json", CURRENT_DIR.display());
+    let path = format!("{}/tests/{file_name}_snapshot.yaml", CURRENT_DIR.display());
     load_heap_from_file(path.as_str()).unwrap()
 }
 
