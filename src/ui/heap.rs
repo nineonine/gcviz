@@ -6,8 +6,9 @@ use ratatui::{
     style::{Color, Style},
     widgets::{Block, Borders, Widget},
 };
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct MemoryCell {
     pub status: CellStatus,
 }
@@ -24,7 +25,7 @@ impl MemoryCell {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum CellStatus {
     Freed,
     ToBeFreed,

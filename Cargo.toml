@@ -10,4 +10,8 @@ ratatui = "0.20"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
+[dev-dependencies]
+gcviz = {path = "."}
+pretty_assertions = "1.3.0"
+lazy_static = "1.4.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

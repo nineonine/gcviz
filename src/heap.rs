@@ -1,11 +1,14 @@
 use std::collections::{BTreeMap, HashSet};
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     error::VMError,
     object::{ObjAddr, Object},
     ui::heap::MemoryCell,
 };
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Heap {
     pub roots: HashSet<ObjAddr>,
     pub objects: BTreeMap<ObjAddr, Object>,

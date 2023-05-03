@@ -42,3 +42,5 @@ pub mod vm;
 
 /// Logging.
 pub mod log;
+
+pub mod file_utils;

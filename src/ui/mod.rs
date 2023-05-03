@@ -42,7 +42,7 @@ pub fn render<B: Backend>(app: &mut App, f: &mut Frame<'_, B>) {
     info::render(app, f, left_panel[0]);
     events::render(app, f, left_panel[1]);
 
-    let memory_grid = HeapGrid::new(app.memviz.clone());
+    let memory_grid = HeapGrid::new(app.vm.heap.memory.clone());
     f.render_widget(memory_grid, inner_chunks[1]);
 
     footer::render(app, f, chunks[2]);

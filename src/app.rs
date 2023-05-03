@@ -23,7 +23,6 @@ pub struct App {
     pub logs: VecDeque<Log>,
     pub log_capacity: usize,
     pub vm: VirtualMachine,
-    pub memviz: Vec<MemoryCell>,
 
     pub sim_params: Parameters,
 }
@@ -31,14 +30,13 @@ pub struct App {
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new(
-        alignment: usize,
         heap_size: usize,
+        alignment: usize,
         gc_ty: &GCType,
         program: Program,
         sim_params: Parameters,
     ) -> Self {
         let vm = VirtualMachine::new(alignment, heap_size, init_collector(gc_ty));
-        let memviz = vec![MemoryCell::free(); heap_size];
         Self {
             running: true,
             program,
@@ -47,7 +45,6 @@ impl App {
             vm,
             logs: VecDeque::with_capacity(LOG_CAPACITY),
             log_capacity: LOG_CAPACITY,
-            memviz,
             frame_ptr: 0,
             sim_params,
         }
@@ -65,7 +62,7 @@ impl App {
         if self.program_paused && !self.eval_next_frame {
             return;
         }
-        reset_highlights(&mut self.memviz);
+        reset_highlights(&mut self.vm.heap.memory);
         if let Some(frame) = self.program.get(self.frame_ptr) {
             match self.vm.tick(frame) {
                 Ok(frame_result) => {
@@ -76,7 +73,7 @@ impl App {
                                 LogSource::ALLOC,
                                 Some(self.frame_ptr),
                             ));
-                            visualize_allocation(&mut self.memviz, addr, object.size());
+                            visualize_allocation(&mut self.vm.heap.memory, addr, object.size());
                         }
                         FrameResult::ReadResult(addr, result) => {
                             self.enqueue_log(Log::new(
@@ -84,7 +81,7 @@ impl App {
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
-                            visualize_mutator(&mut self.memviz, addr);
+                            visualize_mutator(&mut self.vm.heap.memory, addr);
                         }
                         FrameResult::WriteResult(addr, value) => {
                             self.enqueue_log(Log::new(
@@ -92,7 +89,7 @@ impl App {
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
-                            visualize_mutator(&mut self.memviz, addr);
+                            visualize_mutator(&mut self.vm.heap.memory, addr);
                         }
                         FrameResult::GCResult(stats) => {
                             self.enqueue_log(Log::new(
@@ -130,7 +127,7 @@ impl App {
             LogSource::VM,
             Some(self.frame_ptr),
         ));
-        self.memviz = vec![MemoryCell::new(CellStatus::Freed); self.memviz.len()];
+        self.vm.heap.memory = vec![MemoryCell::new(CellStatus::Freed); self.vm.heap.memory.len()];
 
         // Reinitialize the VM
         let new_collector = self.vm.collector.new_instance();

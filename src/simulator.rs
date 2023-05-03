@@ -10,6 +10,7 @@ use crate::{
     vm::VirtualMachine,
 };
 
+/// Program simulation parameters
 #[derive(Debug, Clone)]
 pub struct Parameters {
     pub heap_size: usize,
@@ -30,10 +31,12 @@ impl Default for Parameters {
 }
 
 impl Parameters {
-    pub fn new(num_frames: usize) -> Self {
+    pub fn new(heap_size: usize, alignment: usize, num_frames: usize) -> Self {
         Parameters {
+            heap_size,
+            alignment,
             num_frames,
-            ..Default::default()
+            probs: FramePropabilities::default(),
         }
     }
 }

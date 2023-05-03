@@ -45,11 +45,8 @@ impl Allocator {
                 heap.free_list.push((aligned_end, remaining_size_after));
             }
 
-            // Store the object in memory
+            // Store the object
             heap.objects.insert(aligned_start, object);
-            // for cell in &mut heap.memory[aligned_start..aligned_end] {
-            //     cell.status = CellStatus::Allocated;
-            // }
 
             // Add the object to the roots
             heap.roots.insert(aligned_start);
@@ -61,6 +58,10 @@ impl Allocator {
     }
 
     fn aligned_position(&self, position: usize) -> usize {
+        if self.alignment == 0 {
+            return position;
+        }
+
         let remainder = position % self.alignment;
         if remainder == 0 {
             position
