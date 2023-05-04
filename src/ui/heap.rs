@@ -20,15 +20,15 @@ impl MemoryCell {
 
     pub fn free() -> Self {
         MemoryCell {
-            status: CellStatus::Freed,
+            status: CellStatus::Free,
         }
     }
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum CellStatus {
-    Freed,
-    ToBeFreed,
+    Free,
+    ToBeFree,
     Allocated,
     Marked,
     Used,
@@ -102,8 +102,8 @@ impl<'a> Widget for HeapGrid<'a> {
                 };
 
                 let cell_style = match cell.status {
-                    CellStatus::Freed => Style::default().bg(Color::Black),
-                    CellStatus::ToBeFreed => Style::default().bg(Color::Magenta),
+                    CellStatus::Free => Style::default().bg(Color::Black),
+                    CellStatus::ToBeFree => Style::default().bg(Color::Magenta),
                     CellStatus::Allocated => Style::default().bg(Color::Green),
                     CellStatus::Marked => Style::default().bg(Color::Yellow),
                     CellStatus::Used => Style::default().bg(Color::White),
@@ -122,8 +122,8 @@ impl<'a> Widget for HeapGrid<'a> {
 pub fn reset_highlights(memory: &mut [MemoryCell]) {
     for cell in memory.iter_mut() {
         match cell.status {
-            CellStatus::ToBeFreed => {
-                cell.status = CellStatus::Freed;
+            CellStatus::ToBeFree => {
+                cell.status = CellStatus::Free;
             }
             CellStatus::Used => {
                 cell.status = CellStatus::Allocated;

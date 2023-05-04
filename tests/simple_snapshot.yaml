@@ -14,4 +14,4 @@ memory:
 - status: Allocated
 - status: Allocated
 - status: Allocated
-- status: Freed
+- status: Free

@@ -139,7 +139,7 @@ impl App {
             LogSource::VM,
             Some(self.frame_ptr),
         ));
-        self.vm.heap.memory = vec![MemoryCell::new(CellStatus::Freed); self.vm.heap.memory.len()];
+        self.vm.heap.memory = vec![MemoryCell::new(CellStatus::Free); self.vm.heap.memory.len()];
 
         // Reinitialize the VM
         let new_collector = self.vm.collector.new_instance();
