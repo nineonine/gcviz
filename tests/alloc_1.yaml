@@ -1,0 +1,10 @@
+- !Allocate
+  header: {}
+  fields:
+    - !Scalar 1
+    - !Scalar 2
+- !Allocate
+  header: {}
+  fields:
+    - !Scalar 3
+    - !Scalar 4

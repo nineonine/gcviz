@@ -95,3 +95,8 @@ fn test_could_not_allocate() {
 fn test_alignment_alloc_fail() {
     assert!(__test("alignment_alloc_fail", 2, 2, GCType::MarkSweep).is_err());
 }
+
+#[test]
+fn test_alloc_1() {
+    assert!(__test("alloc_1", 8, 4, GCType::MarkSweep).is_ok());
+}
