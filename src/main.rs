@@ -2,7 +2,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::{env, io};
 
-use gcviz::app::{App, AppResult};
+use gcviz::app::{App, AppResult, LogDestination};
 use gcviz::event::{Event, EventHandler};
 use gcviz::file_utils::load_program_from_file;
 use gcviz::frame::Program;
@@ -33,7 +33,14 @@ fn main() -> AppResult<()> {
         // }
     };
 
-    let mut app = App::new(HEAP_SIZE, ALIGNMENT, &gc_type, program, sim_params);
+    let mut app = App::new(
+        HEAP_SIZE,
+        ALIGNMENT,
+        &gc_type,
+        program,
+        sim_params,
+        LogDestination::EventStream,
+    );
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());
@@ -48,7 +55,11 @@ fn main() -> AppResult<()> {
         tui.draw(&mut app)?;
         // Handle events.
         match tui.events.next()? {
-            Event::Tick => app.tick(),
+            Event::Tick => {
+                if let Err(e) = app.tick() {
+                    panic!("main: {e:?}");
+                }
+            }
             Event::Key(key_event) => handle_key_events(key_event, &mut app)?,
             Event::Mouse(_) => {}
             Event::Resize(_, _) => {}

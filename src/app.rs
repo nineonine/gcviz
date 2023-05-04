@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, error};
 
 use crate::{
+    error::VMError,
     frame::{FrameResult, Program},
     gc::{init_collector, GCType},
     log::{Log, LogSource, LOG_CAPACITY},
@@ -25,6 +26,12 @@ pub struct App {
     pub vm: VirtualMachine,
 
     pub sim_params: Parameters,
+    pub log_dest: LogDestination,
+}
+
+pub enum LogDestination {
+    EventStream,
+    Stdout,
 }
 
 impl App {
@@ -35,6 +42,7 @@ impl App {
         gc_ty: &GCType,
         program: Program,
         sim_params: Parameters,
+        log_dest: LogDestination,
     ) -> Self {
         let vm = VirtualMachine::new(alignment, heap_size, init_collector(gc_ty));
         Self {
@@ -47,6 +55,7 @@ impl App {
             log_capacity: LOG_CAPACITY,
             frame_ptr: 0,
             sim_params,
+            log_dest,
         }
     }
 
@@ -58,9 +67,9 @@ impl App {
     }
 
     /// Handles the tick event of the terminal.
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> Result<(), VMError> {
         if self.program_paused && !self.eval_next_frame {
-            return;
+            return Ok(());
         }
         reset_highlights(&mut self.vm.heap.memory);
         if let Some(frame) = self.program.get(self.frame_ptr) {
@@ -102,15 +111,18 @@ impl App {
                     self.frame_ptr += 1;
                 }
                 Err(e) => {
-                    self.enqueue_log(Log::new(
-                        format!("{e:?}"),
-                        LogSource::ERROR,
-                        Some(self.frame_ptr),
-                    ));
+                    let err_log =
+                        Log::new(format!("{e:?}"), LogSource::ERROR, Some(self.frame_ptr));
+                    match self.log_dest {
+                        LogDestination::Stdout => println!("{e:?}"),
+                        LogDestination::EventStream => self.enqueue_log(err_log),
+                    }
+                    return Err(e);
                 }
             }
         }
         self.eval_next_frame = false;
+        Ok(())
     }
 
     /// Set running to false to quit the application.

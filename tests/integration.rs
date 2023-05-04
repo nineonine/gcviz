@@ -6,7 +6,8 @@ use pretty_assertions::assert_eq;
 use serde_json::to_value;
 
 use gcviz::{
-    app::App,
+    app::{App, LogDestination},
+    error::VMError,
     file_utils::{load_heap_from_file, load_program_from_file, save_heap_snapshot},
     frame::Program,
     gc::GCType,
@@ -31,13 +32,26 @@ fn load_heap_snapshot(file_name: &str) -> Heap {
 fn init_test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCType) -> App {
     let program: Program = load_program(test_name);
     let sim_params: Parameters = Parameters::new(heap_size, alignment, program.len());
-    App::new(heap_size, alignment, &gc_type, program, sim_params)
+    App::new(
+        heap_size,
+        alignment,
+        &gc_type,
+        program,
+        sim_params,
+        LogDestination::Stdout,
+    )
 }
 
-fn run_test(test: &mut App) {
+fn run_test(test: &mut App) -> Result<(), VMError> {
     while test.program.get(test.frame_ptr).is_some() {
-        test.tick();
+        match test.tick() {
+            Err(e) => {
+                return Err(e);
+            }
+            _ => {}
+        }
     }
+    Ok(())
 }
 
 fn check_against_snapshot(test_app: &App, test_name: &str) {
@@ -47,11 +61,16 @@ fn check_against_snapshot(test_app: &App, test_name: &str) {
     assert_eq!(snapshot_value, result_value);
 }
 
-fn __test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCType) {
+fn __test(
+    test_name: &str,
+    heap_size: usize,
+    alignment: usize,
+    gc_type: GCType,
+) -> Result<(), VMError> {
     let update_snapshots = env::var("UPDATE_SNAPSHOTS").is_ok();
 
     let mut test_app = init_test(test_name, heap_size, alignment, gc_type);
-    run_test(&mut test_app);
+    run_test(&mut test_app)?;
     if update_snapshots {
         // save snapshot and don't compare
         let path = format!("{}/tests/{test_name}", CURRENT_DIR.display());
@@ -59,9 +78,15 @@ fn __test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCType) 
     } else {
         check_against_snapshot(&test_app, test_name);
     }
+    Ok(())
 }
 
 #[test]
 fn test_simple() {
-    __test("simple", 4, 0, GCType::MarkSweep);
+    assert!(__test("simple", 4, 0, GCType::MarkSweep).is_ok());
+}
+
+#[test]
+fn test_could_not_allocate() {
+    assert!(__test("could_not_allocate", 1, 0, GCType::MarkSweep).is_err());
 }
