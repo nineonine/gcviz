@@ -87,7 +87,7 @@ impl Simulator {
             self.params.probs.prob_write,
             self.params.probs.prob_gc,
         ];
-        let dist = WeightedIndex::new(&weights).unwrap();
+        let dist = WeightedIndex::new(weights).unwrap();
         for _ in 0..self.params.num_frames {
             let frame = match dist.sample(&mut rng) {
                 0 => self.gen_allocate(),
