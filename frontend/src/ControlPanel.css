@@ -1,0 +1,26 @@
+.control-panel {
+    padding: 10px;
+    border: 1px solid #e0e0e0; /* Light grey border */
+    background-color: #f5f5f5; /* A pleasant grey */
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: auto;
+}
+
+.control-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50; /* Example color */
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+
+    /* Optional: Add some spacing between buttons if they're in a row */
+    margin-right: 10px;
+}
+
+.control-button:hover {
+    background-color: #45a049; /* Slightly darker shade for hover effect */
+}

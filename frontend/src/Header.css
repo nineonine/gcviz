@@ -1,0 +1,19 @@
+.header {
+    background-color: #f5f5f5;  /* A pleasant grey */
+    padding: 10px 10px;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;  /* Use Flexbox for horizontal alignment */
+}
+
+.nav-item {
+    margin-right: 20px; /* Space between items */
+}
+
+.nav-item:last-child {
+    margin-right: 0;  /* Remove margin from the last item */
+}

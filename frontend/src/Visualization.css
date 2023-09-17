@@ -1,0 +1,16 @@
+.visualization {
+    display: flex;
+    flex-direction: column;
+    height: 97vh;
+}
+
+.top-section {
+    display: flex;
+    flex-direction: row;
+}
+
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 3;
+}
