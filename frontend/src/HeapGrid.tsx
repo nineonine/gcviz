@@ -1,11 +1,7 @@
 import React from 'react';
-import { CellStatus } from './types';
+import { CellStatus, MemoryCell } from './types';
 
 import './HeapGrid.css';
-
-interface MemoryCell {
-    status: CellStatus;
-}
 
 interface HeapGridProps {
     memory: MemoryCell[];

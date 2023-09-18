@@ -1,14 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Visualization.css';
 
 import InfoBlock from './InfoBlock';
 import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
-import { CellStatus } from './types';
+import { CellStatus, MemoryCell } from './types';
+
+const INTERVAL_RATE = 1000; // 1 second
 
 const Visualization: React.FC = () => {
-    const intervalRate = 1000; // 1 second by default
+    const intervalRate = INTERVAL_RATE;
+    const [memory, setMemory] = useState<Array<MemoryCell>>(new Array(1024).fill({status: CellStatus.Free}));
 
     useEffect(() => {
         // Initialize WebSocket connection
@@ -26,6 +29,12 @@ const Visualization: React.FC = () => {
             }
         }, intervalRate);
 
+        wsConnection.onmessage = (event) => {
+            // console.log("Received message:", event.data);
+            const newMemory = JSON.parse(event.data);
+            setMemory(newMemory);
+        };
+
         // Cleanup: close the WebSocket and clear the interval when the component is unmounted
         return () => {
             clearInterval(intervalId);
@@ -40,7 +49,7 @@ const Visualization: React.FC = () => {
                     <InfoBlock />
                     <EventStream />
                 </div>
-                <HeapGrid memory={new Array(1024).fill({ status: CellStatus.Free })} />
+                <HeapGrid memory={memory} />
             </div>
             <ControlPanel />
         </div>

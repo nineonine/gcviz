@@ -70,7 +70,11 @@ impl Session {
                                 LogSource::ALLOC,
                                 Some(self.instr_ptr),
                             ));
-                            // ...
+                            Self::visualize_allocation(
+                                &mut self.vm.heap.memory,
+                                addr,
+                                object.size(),
+                            );
                         }
                         FrameResult::ReadResult(addr, result) => {
                             self.enqueue_log(Log::new(
@@ -78,7 +82,7 @@ impl Session {
                                 LogSource::MUT,
                                 Some(self.instr_ptr),
                             ));
-                            // ...
+                            Self::visualize_mutator(&mut self.vm.heap.memory, addr);
                         }
                         FrameResult::WriteResult(addr, value) => {
                             self.enqueue_log(Log::new(
@@ -86,7 +90,7 @@ impl Session {
                                 LogSource::MUT,
                                 Some(self.instr_ptr),
                             ));
-                            // ...
+                            Self::visualize_mutator(&mut self.vm.heap.memory, addr);
                         }
                         FrameResult::GCResult(stats) => {
                             self.enqueue_log(Log::new(
@@ -130,5 +134,15 @@ impl Session {
             self.vm.heap.memory.len(),
             new_collector,
         );
+    }
+
+    fn visualize_mutator(memory: &mut [MemoryCell], addr: usize) {
+        memory[addr] = MemoryCell::new(CellStatus::Used);
+    }
+
+    fn visualize_allocation(memory: &mut [MemoryCell], addr: usize, size: usize) {
+        for c in memory.iter_mut().skip(addr).take(size) {
+            *c = MemoryCell::new(CellStatus::Allocated);
+        }
     }
 }

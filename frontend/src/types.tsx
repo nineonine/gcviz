@@ -37,3 +37,8 @@ type Instruction
 
 type ObjectAddr = number;
 type Value = number;
+
+
+export interface MemoryCell {
+    status: CellStatus;
+}

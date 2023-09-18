@@ -36,6 +36,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
     while let Some(msg) = ws_stream.next().await {
         let msg = msg?;
         if msg.is_text() || msg.is_binary() {
+            debug!("Tick!");
             if let Err(e) = session.tick() {
                 error!("tick panic: {}", e);
             }
@@ -44,7 +45,6 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
             let serialized_memory = serde_json::to_string(&session.vm.heap.memory)
                 .expect("Failed to serialize heap memory");
             ws_stream.send(Message::Text(serialized_memory)).await?;
-            ws_stream.send(msg).await?;
         }
     }
 
@@ -82,6 +82,7 @@ fn init_session() -> SessionResult<Session> {
         load_program_from_file(&args[1])?
     } else {
         let mut sim = Simulator::new(sim_params.clone(), &gc_type);
+        info!("Generating program using simulation params");
         sim.gen_program()
         // match save_program_to_file(&program) {
         //     Ok(filename) => println!("Program saved to {}", filename),
