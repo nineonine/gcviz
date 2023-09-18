@@ -6,12 +6,12 @@ use pretty_assertions::assert_eq;
 use serde_json::to_value;
 
 use gcviz::{
-    session::{App, LogDestination},
     error::VMError,
     file_utils::{load_heap_from_file, load_program_from_file, save_heap_snapshot},
     frame::Program,
     gc::GCType,
     heap::Heap,
+    session::{LogDestination, Session},
     simulator::Parameters,
 };
 
@@ -29,10 +29,10 @@ fn load_heap_snapshot(file_name: &str) -> Heap {
     load_heap_from_file(path.as_str()).unwrap()
 }
 
-fn init_test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCType) -> App {
+fn init_test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCType) -> Session {
     let program: Program = load_program(test_name);
     let sim_params: Parameters = Parameters::new(heap_size, alignment, program.len());
-    App::new(
+    Session::new(
         heap_size,
         alignment,
         &gc_type,
@@ -42,8 +42,8 @@ fn init_test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCTyp
     )
 }
 
-fn run_test(test: &mut App) -> Result<(), VMError> {
-    while test.program.get(test.frame_ptr).is_some() {
+fn run_test(test: &mut Session) -> Result<(), VMError> {
+    while test.program.get(test.instr_ptr).is_some() {
         match test.tick() {
             Err(e) => {
                 return Err(e);
@@ -54,7 +54,7 @@ fn run_test(test: &mut App) -> Result<(), VMError> {
     Ok(())
 }
 
-fn check_against_snapshot(test_app: &App, test_name: &str) {
+fn check_against_snapshot(test_app: &Session, test_name: &str) {
     let result_value = to_value(&test_app.vm.heap).unwrap();
     let heap_snapshot = load_heap_snapshot(test_name);
     let snapshot_value = to_value(&heap_snapshot).unwrap();

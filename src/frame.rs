@@ -7,10 +7,10 @@ use crate::{
     object::{ObjAddr, Object, Value},
 };
 
-pub type Program = VecDeque<ExecFrame>;
+pub type Program = VecDeque<Instruction>;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum ExecFrame {
+pub enum Instruction {
     Allocate(Object),
     Read(ObjAddr),
     Write(ObjAddr, Value),

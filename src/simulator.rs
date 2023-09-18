@@ -4,7 +4,7 @@ use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom
 
 use crate::{
     error::VMError,
-    frame::{ExecFrame, Program},
+    frame::{Instruction, Program},
     gc::{init_collector, GCType},
     object::{Field, ObjAddr, Object},
     vm::VirtualMachine,
@@ -93,7 +93,7 @@ impl Simulator {
                 0 => self.gen_allocate(),
                 1 => self.gen_read(),
                 2 => self.gen_write(),
-                _ => ExecFrame::GC,
+                _ => Instruction::GC,
             };
             program.push_back(frame);
         }
@@ -101,7 +101,7 @@ impl Simulator {
         program
     }
 
-    fn gen_allocate(&mut self) -> ExecFrame {
+    fn gen_allocate(&mut self) -> Instruction {
         // Generate a random Object
         let object = Object::random();
         match self
@@ -109,12 +109,12 @@ impl Simulator {
             .allocator
             .allocate(&mut self.vm.heap, object.clone())
         {
-            Ok(_) => ExecFrame::Allocate(object),
+            Ok(_) => Instruction::Allocate(object),
             Err(_) => panic!("gen_allocate"),
         }
     }
 
-    fn gen_read(&mut self) -> ExecFrame {
+    fn gen_read(&mut self) -> Instruction {
         // Generate a random valid address from the heap
         let mut rng = rand::thread_rng();
         if let Some(obj_addr) = self.random_object_address() {
@@ -132,7 +132,7 @@ impl Simulator {
                 self.gen_allocate()
             } else {
                 let field_offset = valid_indexes.choose(&mut rng).unwrap();
-                ExecFrame::Read(obj_addr + field_offset)
+                Instruction::Read(obj_addr + field_offset)
             }
         } else {
             // If there are no objects in the heap, just allocate
@@ -140,7 +140,7 @@ impl Simulator {
         }
     }
 
-    fn gen_write(&mut self) -> ExecFrame {
+    fn gen_write(&mut self) -> Instruction {
         let mut rng = rand::thread_rng();
 
         if let Some(obj_addr) = self
@@ -191,9 +191,9 @@ impl Simulator {
             };
 
             match self.vm.mutator.write(&mut self.vm.heap, address, value) {
-                Ok(_) => ExecFrame::Write(address, value),
+                Ok(_) => Instruction::Write(address, value),
                 Err(e) => match e {
-                    VMError::AllocationError => ExecFrame::GC,
+                    VMError::AllocationError => Instruction::GC,
                     _ => panic!("gen_write"),
                 },
             }

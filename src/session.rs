@@ -13,10 +13,10 @@ use crate::{
 /// Application result type.
 pub type SessionResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-/// Application.
+/// Program execution session
 pub struct Session {
     pub program: Program,
-    pub frame_ptr: usize,
+    pub instr_ptr: usize,
     pub logs: VecDeque<Log>,
     pub log_capacity: usize,
     pub vm: VirtualMachine,
@@ -31,7 +31,6 @@ pub enum LogDestination {
 }
 
 impl Session {
-
     pub fn new(
         heap_size: usize,
         alignment: usize,
@@ -46,7 +45,7 @@ impl Session {
             vm,
             logs: VecDeque::with_capacity(LOG_CAPACITY),
             log_capacity: LOG_CAPACITY,
-            frame_ptr: 0,
+            instr_ptr: 0,
             sim_params,
             log_dest,
         }
@@ -59,17 +58,17 @@ impl Session {
         self.logs.push_back(log);
     }
 
-    /// 1 frame execution
+    /// program interpretation step
     pub fn tick(&mut self) -> Result<(), VMError> {
-        if let Some(frame) = self.program.get(self.frame_ptr) {
-            match self.vm.tick(frame) {
-                Ok(frame_result) => {
-                    match frame_result {
+        if let Some(instruction) = self.program.get(self.instr_ptr) {
+            match self.vm.tick(instruction) {
+                Ok(instr_result) => {
+                    match instr_result {
                         FrameResult::AllocResult(object, addr) => {
                             self.enqueue_log(Log::new(
                                 format!("{object} at 0x{addr:X}"),
                                 LogSource::ALLOC,
-                                Some(self.frame_ptr),
+                                Some(self.instr_ptr),
                             ));
                             // ...
                         }
@@ -77,7 +76,7 @@ impl Session {
                             self.enqueue_log(Log::new(
                                 format!("Read value from 0x{addr:X}. Value: {result}"),
                                 LogSource::MUT,
-                                Some(self.frame_ptr),
+                                Some(self.instr_ptr),
                             ));
                             // ...
                         }
@@ -85,7 +84,7 @@ impl Session {
                             self.enqueue_log(Log::new(
                                 format!("Write value {value:} to 0x{addr:X}"),
                                 LogSource::MUT,
-                                Some(self.frame_ptr),
+                                Some(self.instr_ptr),
                             ));
                             // ...
                         }
@@ -93,15 +92,15 @@ impl Session {
                             self.enqueue_log(Log::new(
                                 format!("Collect garbage. Stats: {stats:?}"),
                                 LogSource::GC,
-                                Some(self.frame_ptr),
+                                Some(self.instr_ptr),
                             ));
                         }
                     }
-                    self.frame_ptr += 1;
+                    self.instr_ptr += 1;
                 }
                 Err(e) => {
                     let err_log =
-                        Log::new(format!("{e:?}"), LogSource::ERROR, Some(self.frame_ptr));
+                        Log::new(format!("{e:?}"), LogSource::ERROR, Some(self.instr_ptr));
                     match self.log_dest {
                         LogDestination::Stdout => println!("{e:?}"),
                         LogDestination::EventStream => self.enqueue_log(err_log),
@@ -115,12 +114,12 @@ impl Session {
 
     pub fn restart(&mut self) {
         // Reset the state of the application
-        self.frame_ptr = 0;
+        self.instr_ptr = 0;
         self.logs.clear();
         self.enqueue_log(Log::new(
             "Program restarted. Hit 'space' to run.".to_string(),
             LogSource::VM,
-            Some(self.frame_ptr),
+            Some(self.instr_ptr),
         ));
         self.vm.heap.memory = vec![MemoryCell::new(CellStatus::Free); self.vm.heap.memory.len()];
 

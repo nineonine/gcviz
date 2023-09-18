@@ -27,9 +27,9 @@ export type Session = {
     program: Program
 }
 
-type Program = ExecFrame[];
+type Program = Instruction[];
 
-type ExecFrame
+type Instruction
     = {_type: 'Allocate', object: Object }
     | {_type: 'Read', object: ObjectAddr }
     | {_type: 'Write', addr: ObjectAddr, payload: Value}

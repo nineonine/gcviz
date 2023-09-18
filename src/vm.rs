@@ -3,8 +3,8 @@ use crate::{allocator::Allocator, heap::Heap, mutator::Mutator};
 use crate::{
     error::VMError,
     frame::{
-        ExecFrame::{self, Allocate, Read, Write, GC},
         FrameResult,
+        Instruction::{self, Allocate, Read, Write, GC},
     },
 };
 
@@ -25,8 +25,8 @@ impl VirtualMachine {
         }
     }
 
-    pub fn tick(&mut self, frame: &ExecFrame) -> Result<FrameResult, VMError> {
-        match frame {
+    pub fn tick(&mut self, instr: &Instruction) -> Result<FrameResult, VMError> {
+        match instr {
             Allocate(obj) => self
                 .allocator
                 .allocate(&mut self.heap, obj.clone())
