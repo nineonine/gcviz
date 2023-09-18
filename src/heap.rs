@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::VMError,
     object::{ObjAddr, Object},
-    ui::heap::MemoryCell,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -14,6 +13,32 @@ pub struct Heap {
     pub objects: BTreeMap<ObjAddr, Object>,
     pub free_list: Vec<(usize, usize)>,
     pub memory: Vec<MemoryCell>,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub struct MemoryCell {
+    pub status: CellStatus,
+}
+
+impl MemoryCell {
+    pub fn new(status: CellStatus) -> Self {
+        MemoryCell { status }
+    }
+
+    pub fn free() -> Self {
+        MemoryCell {
+            status: CellStatus::Free,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub enum CellStatus {
+    Free,
+    ToBeFree,
+    Allocated,
+    Marked,
+    Used,
 }
 
 impl Heap {

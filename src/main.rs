@@ -1,22 +1,16 @@
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
-use std::{env, io};
+use std::env;
 
-use gcviz::app::{App, AppResult, LogDestination};
-use gcviz::event::{Event, EventHandler};
+use gcviz::session::{Session, SessionResult, LogDestination};
 use gcviz::file_utils::load_program_from_file;
 use gcviz::frame::Program;
 use gcviz::gc::GCType;
-use gcviz::handler::handle_key_events;
 use gcviz::simulator::{Parameters, Simulator};
-use gcviz::tui::Tui;
 
-static TICK_RATE: u64 = 100;
 static NUM_FRAMES: usize = 100; // program size
 static ALIGNMENT: usize = 4;
 static HEAP_SIZE: usize = 1024;
 
-fn main() -> AppResult<()> {
+fn main() -> SessionResult<()> {
     // Check command line arguments for a program file name.
     let args: Vec<String> = env::args().collect();
     // Create an application.
@@ -33,7 +27,7 @@ fn main() -> AppResult<()> {
         // }
     };
 
-    let mut app = App::new(
+    let mut session = Session::new(
         HEAP_SIZE,
         ALIGNMENT,
         &gc_type,
@@ -42,31 +36,13 @@ fn main() -> AppResult<()> {
         LogDestination::EventStream,
     );
 
-    // Initialize the terminal user interface.
-    let backend = CrosstermBackend::new(io::stderr());
-    let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(TICK_RATE);
-    let mut tui = Tui::new(terminal, events);
-    tui.init()?;
-
     // Start the main loop.
-    while app.running {
-        // Render the user interface.
-        tui.draw(&mut app)?;
-        // Handle events.
-        match tui.events.next()? {
-            Event::Tick => {
-                if let Err(e) = app.tick() {
-                    panic!("main: {e:?}");
-                }
-            }
-            Event::Key(key_event) => handle_key_events(key_event, &mut app)?,
-            Event::Mouse(_) => {}
-            Event::Resize(_, _) => {}
+    while true {
+        if let Err(e) = session.tick() {
+            panic!("main: {e:?}");
         }
     }
 
     // Exit the user interface.
-    tui.exit()?;
     Ok(())
 }

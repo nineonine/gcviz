@@ -4,22 +4,18 @@ use crate::{
     error::VMError,
     frame::{FrameResult, Program},
     gc::{init_collector, GCType},
+    heap::{CellStatus, MemoryCell},
     log::{Log, LogSource, LOG_CAPACITY},
     simulator::Parameters,
-    ui::heap::{reset_highlights, visualize_allocation, visualize_mutator, CellStatus, MemoryCell},
     vm::VirtualMachine,
 };
 
 /// Application result type.
-pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
+pub type SessionResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 /// Application.
-pub struct App {
-    /// Is the application running?
-    pub running: bool,
+pub struct Session {
     pub program: Program,
-    pub program_paused: bool,
-    pub eval_next_frame: bool,
     pub frame_ptr: usize,
     pub logs: VecDeque<Log>,
     pub log_capacity: usize,
@@ -34,8 +30,8 @@ pub enum LogDestination {
     Stdout,
 }
 
-impl App {
-    /// Constructs a new instance of [`App`].
+impl Session {
+
     pub fn new(
         heap_size: usize,
         alignment: usize,
@@ -46,10 +42,7 @@ impl App {
     ) -> Self {
         let vm = VirtualMachine::new(alignment, heap_size, init_collector(gc_ty));
         Self {
-            running: true,
             program,
-            program_paused: false,
-            eval_next_frame: false,
             vm,
             logs: VecDeque::with_capacity(LOG_CAPACITY),
             log_capacity: LOG_CAPACITY,
@@ -66,12 +59,8 @@ impl App {
         self.logs.push_back(log);
     }
 
-    /// Handles the tick event of the terminal.
+    /// 1 frame execution
     pub fn tick(&mut self) -> Result<(), VMError> {
-        if self.program_paused && !self.eval_next_frame {
-            return Ok(());
-        }
-        reset_highlights(&mut self.vm.heap.memory);
         if let Some(frame) = self.program.get(self.frame_ptr) {
             match self.vm.tick(frame) {
                 Ok(frame_result) => {
@@ -82,7 +71,7 @@ impl App {
                                 LogSource::ALLOC,
                                 Some(self.frame_ptr),
                             ));
-                            visualize_allocation(&mut self.vm.heap.memory, addr, object.size());
+                            // ...
                         }
                         FrameResult::ReadResult(addr, result) => {
                             self.enqueue_log(Log::new(
@@ -90,7 +79,7 @@ impl App {
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
-                            visualize_mutator(&mut self.vm.heap.memory, addr);
+                            // ...
                         }
                         FrameResult::WriteResult(addr, value) => {
                             self.enqueue_log(Log::new(
@@ -98,7 +87,7 @@ impl App {
                                 LogSource::MUT,
                                 Some(self.frame_ptr),
                             ));
-                            visualize_mutator(&mut self.vm.heap.memory, addr);
+                            // ...
                         }
                         FrameResult::GCResult(stats) => {
                             self.enqueue_log(Log::new(
@@ -121,13 +110,7 @@ impl App {
                 }
             }
         }
-        self.eval_next_frame = false;
         Ok(())
-    }
-
-    /// Set running to false to quit the application.
-    pub fn quit(&mut self) {
-        self.running = false;
     }
 
     pub fn restart(&mut self) {

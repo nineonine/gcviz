@@ -22,3 +22,18 @@ export function pprCellStatus(status: CellStatus): string {
             throw new Error('pprCellStatus');
     }
 }
+
+export type Session = {
+    program: Program
+}
+
+type Program = ExecFrame[];
+
+type ExecFrame
+    = {_type: 'Allocate', object: Object }
+    | {_type: 'Read', object: ObjectAddr }
+    | {_type: 'Write', addr: ObjectAddr, payload: Value}
+    | {_type: 'GC'}
+
+type ObjectAddr = number;
+type Value = number;

@@ -6,7 +6,7 @@ use pretty_assertions::assert_eq;
 use serde_json::to_value;
 
 use gcviz::{
-    app::{App, LogDestination},
+    session::{App, LogDestination},
     error::VMError,
     file_utils::{load_heap_from_file, load_program_from_file, save_heap_snapshot},
     frame::Program,
