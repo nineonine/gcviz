@@ -1,5 +1,5 @@
 use futures_util::{SinkExt, StreamExt};
-use log::*;
+use log::{debug, error, info};
 use std::env;
 use std::net::SocketAddr;
 use tokio::net::{TcpListener, TcpStream};
@@ -9,11 +9,11 @@ use tokio_tungstenite::{
 };
 use tungstenite::Message;
 
-use gcviz::file_utils::load_program_from_file;
 use gcviz::frame::Program;
 use gcviz::gc::GCType;
 use gcviz::session::{LogDestination, Session, SessionResult};
 use gcviz::simulator::{Parameters, Simulator};
+use gcviz::{file_utils::load_program_from_file, wsmsg::WSMessageResponse};
 
 static NUM_FRAMES: usize = 100;
 static ALIGNMENT: usize = 4;
@@ -36,14 +36,17 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
     while let Some(msg) = ws_stream.next().await {
         let msg = msg?;
         if msg.is_text() || msg.is_binary() {
-            debug!("Tick!");
+            let last_log_entry = session.logs.back().cloned().clone();
+            debug!("{} {:?}", session.instr_ptr, last_log_entry);
             if let Err(e) = session.tick() {
                 error!("tick panic: {}", e);
             }
 
             // Serialize the heap's memory and send it to the client.
-            let serialized_memory = serde_json::to_string(&session.vm.heap.memory)
-                .expect("Failed to serialize heap memory");
+            let msg_resp =
+                WSMessageResponse::new_tick(session.vm.heap.memory.clone(), last_log_entry);
+            let serialized_memory =
+                serde_json::to_string(&msg_resp).expect("Failed to serialize Tick message");
             ws_stream.send(Message::Text(serialized_memory)).await?;
         }
     }

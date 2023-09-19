@@ -1,11 +1,26 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import './EventStream.css';
+import { LogEntry } from './logEntry';
 
-const EventStream: React.FC = () => {
+interface EventStreamProps {
+    logs: LogEntry[];
+}
+
+const EventStream: React.FC<EventStreamProps> = ({ logs }) => {
+    const endOfMessagesRef = useRef<null | HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (endOfMessagesRef.current) {
+            endOfMessagesRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [logs]);
+
     return (
         <div className="event-stream">
-            {/* Content for EventStream */}
-            <p>Events will stream here...</p>
+            {logs.map((log, index) => (
+                <p key={index}>{log.msg} (Source: {log.source}, Frame ID: {log.frame_id || 'N/A'})</p>
+            ))}
+            <div ref={endOfMessagesRef}></div>
         </div>
     );
 }

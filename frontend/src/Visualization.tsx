@@ -5,7 +5,8 @@ import InfoBlock from './InfoBlock';
 import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
-import { CellStatus, MemoryCell } from './types';
+import { CellStatus, MemoryCell, WSMsgType } from './types';
+import { LogEntry, SUGGEST_INIT_LOG_ENTRY } from './logEntry';
 
 const INTERVAL_RATE = 500; // 1 second
 
@@ -14,6 +15,7 @@ const Visualization: React.FC = () => {
     const [ws, setWs] = useState<WebSocket | null>(null);
     const [memory, setMemory] = useState<Array<MemoryCell>>(new Array(0).fill({ status: CellStatus.Free }));
     const [isRunning, setIsRunning] = useState(false);
+    const [eventLogs, setEventLogs] = useState<LogEntry[]>([SUGGEST_INIT_LOG_ENTRY]);
 
     const toggleExecution = () => {
         setIsRunning(!isRunning);
@@ -35,8 +37,16 @@ const Visualization: React.FC = () => {
         };
 
         wsConnection.onmessage = (event) => {
-            const newMemory = JSON.parse(event.data);
-            setMemory(newMemory);
+            const data = JSON.parse(event.data);
+            console.log(data)
+
+            if (data.log_entry) {
+                setEventLogs(prevLogs => [...prevLogs, data.log_entry]);
+            }
+
+            if (data.memory) {
+                setMemory(data.memory);
+            }
         };
 
         return () => {
@@ -49,7 +59,7 @@ const Visualization: React.FC = () => {
 
         if (isRunning && ws?.readyState === WebSocket.OPEN) {
             intervalId = setInterval(() => {
-                ws.send("Message to send every interval");
+                ws.send(WSMsgType.TICK);
             }, intervalRate);
         }
 
@@ -63,7 +73,7 @@ const Visualization: React.FC = () => {
             <div className="top-section">
                 <div className="left-panel">
                     <InfoBlock />
-                    <EventStream />
+                    <EventStream logs={eventLogs} />
                 </div>
                 <HeapGrid memory={memory} />
             </div>

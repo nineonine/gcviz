@@ -42,3 +42,14 @@ type Value = number;
 export interface MemoryCell {
     status: CellStatus;
 }
+
+export enum WSMsgType {
+    TICK = 'TICK',
+    RESET = 'RESET',
+    STEP = 'STEP',
+}
+
+export interface WSMessage {
+    wsType: WSMsgType;
+    memory: MemoryCell[];
+}

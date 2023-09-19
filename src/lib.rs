@@ -31,4 +31,7 @@ pub mod vm;
 /// Logging.
 pub mod log;
 
+/// WebSocket Messages
+pub mod wsmsg;
+
 pub mod file_utils;
