@@ -24,3 +24,13 @@
 .control-button:hover {
     background-color: #45a049; /* Slightly darker shade for hover effect */
 }
+
+@keyframes blinking {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+.blinking {
+    animation: blinking 1s infinite;
+}

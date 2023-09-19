@@ -7,40 +7,56 @@ import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
 import { CellStatus, MemoryCell } from './types';
 
-const INTERVAL_RATE = 1000; // 1 second
+const INTERVAL_RATE = 500; // 1 second
 
 const Visualization: React.FC = () => {
     const intervalRate = INTERVAL_RATE;
-    const [memory, setMemory] = useState<Array<MemoryCell>>(new Array(1024).fill({status: CellStatus.Free}));
+    const [ws, setWs] = useState<WebSocket | null>(null);
+    const [memory, setMemory] = useState<Array<MemoryCell>>(new Array(0).fill({ status: CellStatus.Free }));
+    const [isRunning, setIsRunning] = useState(false);
+
+    const toggleExecution = () => {
+        setIsRunning(!isRunning);
+    };
+
+    const handleRestart = () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send("RESET");
+        }
+    };
 
     useEffect(() => {
-        // Initialize WebSocket connection
+        // Initialize WebSocket connection only once when component mounts
         const wsConnection = new WebSocket("ws://127.0.0.1:9002");
+        setWs(wsConnection);
 
-        // Handle any errors that occur on the WebSocket connection
         wsConnection.onerror = (error) => {
             console.error("WebSocket Error", error);
         };
 
-        // Periodically send a message over WebSocket
-        const intervalId = setInterval(() => {
-            if (wsConnection.readyState === WebSocket.OPEN) {
-                wsConnection.send("Message to send every interval");
-            }
-        }, intervalRate);
-
         wsConnection.onmessage = (event) => {
-            // console.log("Received message:", event.data);
             const newMemory = JSON.parse(event.data);
             setMemory(newMemory);
         };
 
-        // Cleanup: close the WebSocket and clear the interval when the component is unmounted
         return () => {
-            clearInterval(intervalId);
             wsConnection.close();
         };
     }, [intervalRate]);
+
+    useEffect(() => {
+        let intervalId: any = null;
+
+        if (isRunning && ws?.readyState === WebSocket.OPEN) {
+            intervalId = setInterval(() => {
+                ws.send("Message to send every interval");
+            }, intervalRate);
+        }
+
+        return () => {
+            intervalId && clearInterval(intervalId);
+        };
+    }, [isRunning, ws, intervalRate]);
 
     return (
         <div className="visualization">
@@ -51,7 +67,7 @@ const Visualization: React.FC = () => {
                 </div>
                 <HeapGrid memory={memory} />
             </div>
-            <ControlPanel />
+            <ControlPanel isRunning={isRunning} toggleExecution={toggleExecution} onRestart={handleRestart} />
         </div>
     );
 }
