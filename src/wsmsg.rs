@@ -1,8 +1,22 @@
 use crate::{heap::MemoryCell, log::Log};
 use serde::{
-    ser::{Serialize, SerializeStruct, Serializer},
-    Deserialize,
+    ser::{SerializeStruct, Serializer},
+    Deserialize, Serialize,
 };
+
+#[derive(Deserialize, Debug)]
+pub struct WSMessageRequest {
+    #[serde(rename = "type")]
+    pub msg_type: WSMessageRequestType,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum WSMessageRequestType {
+    RESET,
+    TICK,
+    STEP,
+}
 
 #[derive(Debug, Deserialize)]
 pub enum WSMessageResponse {

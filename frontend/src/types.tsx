@@ -7,7 +7,7 @@ export enum CellStatus {
 }
 
 export function pprCellStatus(status: CellStatus): string {
-    switch(status) {
+    switch (status) {
         case CellStatus.Free:
             return "Free";
         case CellStatus.ToBeFree:
@@ -30,10 +30,10 @@ export type Session = {
 type Program = Instruction[];
 
 type Instruction
-    = {_type: 'Allocate', object: Object }
-    | {_type: 'Read', object: ObjectAddr }
-    | {_type: 'Write', addr: ObjectAddr, payload: Value}
-    | {_type: 'GC'}
+    = { _type: 'Allocate', object: Object }
+    | { _type: 'Read', object: ObjectAddr }
+    | { _type: 'Write', addr: ObjectAddr, payload: Value }
+    | { _type: 'GC' }
 
 type ObjectAddr = number;
 type Value = number;
@@ -43,13 +43,11 @@ export interface MemoryCell {
     status: CellStatus;
 }
 
-export enum WSMsgType {
-    TICK = 'TICK',
-    RESET = 'RESET',
-    STEP = 'STEP',
-}
+export type WSMsgRequest
+    = { type: 'TICK' }
+    | { type: 'RESET' }
+    | { type: 'STEP' }
 
-export interface WSMessage {
-    wsType: WSMsgType;
-    memory: MemoryCell[];
-}
+export const TICK_MSG: WSMsgRequest = { type: 'TICK' }
+export const RESET_MSG: WSMsgRequest = { type: 'RESET' }
+export const STEP_MSG: WSMsgRequest = { type: 'STEP' }

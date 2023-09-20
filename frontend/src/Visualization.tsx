@@ -5,10 +5,10 @@ import InfoBlock from './InfoBlock';
 import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
-import { CellStatus, MemoryCell, WSMsgType } from './types';
+import { CellStatus, MemoryCell, RESET_MSG, TICK_MSG } from './types';
 import { LogEntry, SUGGEST_INIT_LOG_ENTRY } from './logEntry';
 
-const INTERVAL_RATE = 500; // 1 second
+const INTERVAL_RATE = 100; // 1 second
 
 const Visualization: React.FC = () => {
     const intervalRate = INTERVAL_RATE;
@@ -21,10 +21,17 @@ const Visualization: React.FC = () => {
         setIsRunning(!isRunning);
     };
 
+    const resetViz = (): void => {
+        setIsRunning(false);
+        setMemory(new Array(0).fill({ status: CellStatus.Free }));
+        setEventLogs([SUGGEST_INIT_LOG_ENTRY]);
+    }
+
     const handleRestart = () => {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send("RESET");
+            ws.send(JSON.stringify(RESET_MSG));
         }
+        resetViz();
     };
 
     useEffect(() => {
@@ -59,7 +66,7 @@ const Visualization: React.FC = () => {
 
         if (isRunning && ws?.readyState === WebSocket.OPEN) {
             intervalId = setInterval(() => {
-                ws.send(WSMsgType.TICK);
+                ws.send(JSON.stringify(TICK_MSG));
             }, intervalRate);
         }
 
