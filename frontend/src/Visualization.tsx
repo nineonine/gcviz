@@ -6,7 +6,7 @@ import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
 import { CellStatus, MemoryCell, RESET_MSG, TICK_MSG } from './types';
-import { LogEntry, SUGGEST_INIT_LOG_ENTRY } from './logEntry';
+import { LogEntry, SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logEntry';
 
 const INTERVAL_RATE = 100; // 1 second
 
@@ -45,14 +45,22 @@ const Visualization: React.FC = () => {
 
         wsConnection.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log(data)
+            switch (data.msgType) {
+                case 'TICK': {
+                    if (data.log_entry) {
+                        setEventLogs(prevLogs => [...prevLogs, data.log_entry]);
+                    }
 
-            if (data.log_entry) {
-                setEventLogs(prevLogs => [...prevLogs, data.log_entry]);
-            }
-
-            if (data.memory) {
-                setMemory(data.memory);
+                    if (data.memory) {
+                        setMemory(data.memory);
+                    }
+                    break;
+                }
+                case 'HALT': {
+                    setIsRunning(false);
+                    setEventLogs(prevLogs => [...prevLogs, mkLogEntry("Program halted. Hit 'R' to restart")]);
+                    break;
+                }
             }
         };
 

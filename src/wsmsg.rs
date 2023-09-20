@@ -24,6 +24,7 @@ pub enum WSMessageResponse {
         memory: Vec<MemoryCell>,
         log_entry: Option<Log>,
     },
+    Halt,
 }
 
 impl Serialize for WSMessageResponse {
@@ -40,6 +41,9 @@ impl Serialize for WSMessageResponse {
                 state.serialize_field("memory", memory)?;
                 state.serialize_field("log_entry", log_entry)?;
             }
+            WSMessageResponse::Halt => {
+                state.serialize_field("msgType", "HALT")?;
+            }
         }
 
         // Finish the struct.
@@ -50,5 +54,9 @@ impl Serialize for WSMessageResponse {
 impl WSMessageResponse {
     pub fn new_tick(memory: Vec<MemoryCell>, log_entry: Option<Log>) -> Self {
         WSMessageResponse::Tick { memory, log_entry }
+    }
+
+    pub fn halt() -> Self {
+        WSMessageResponse::Halt
     }
 }
