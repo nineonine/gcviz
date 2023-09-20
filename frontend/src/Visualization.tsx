@@ -16,13 +16,16 @@ const Visualization: React.FC = () => {
     const [memory, setMemory] = useState<Array<MemoryCell>>(new Array(0).fill({ status: CellStatus.Free }));
     const [isRunning, setIsRunning] = useState(false);
     const [eventLogs, setEventLogs] = useState<LogEntry[]>([SUGGEST_INIT_LOG_ENTRY]);
+    const [isHalt, setIsHalt] = useState<boolean>(false);
 
     const toggleExecution = () => {
+        if (isHalt) return;
         setIsRunning(!isRunning);
     };
 
     const resetViz = (): void => {
         setIsRunning(false);
+        setIsHalt(false);
         setMemory(new Array(0).fill({ status: CellStatus.Free }));
         setEventLogs([SUGGEST_INIT_LOG_ENTRY]);
     }
@@ -57,6 +60,7 @@ const Visualization: React.FC = () => {
                     break;
                 }
                 case 'HALT': {
+                    setIsHalt(true);
                     setIsRunning(false);
                     setEventLogs(prevLogs => [...prevLogs, mkLogEntry("Program halted. Hit 'R' to restart")]);
                     break;

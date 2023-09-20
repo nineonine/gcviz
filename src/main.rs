@@ -43,11 +43,11 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
             match request {
                 Ok(msg) => match msg.msg_type {
                     WSMessageRequestType::TICK => {
-                        let last_log_entry = session.logs.back().cloned().clone();
-                        debug!("{} {:?}", session.instr_ptr, last_log_entry);
                         if let Err(e) = session.tick() {
                             error!("tick panic: {}", e);
                         }
+                        let last_log_entry = session.logs.back().cloned().clone();
+                        debug!("{} {:?}", session.instr_ptr, last_log_entry);
                         // Serialize the heap's memory and send it to the client.
                         let msg_resp = WSMessageResponse::new_tick(
                             session.vm.heap.memory.clone(),
