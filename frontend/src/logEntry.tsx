@@ -31,7 +31,7 @@ export const logSrcToColor = (source: LogSource): string => {
         case LogSource.MUT:
             return "#228B22";
         case LogSource.ALLOC:
-            return "#0000FF";
+            return "#7CCD7C";
         case LogSource.VM:
             return "#DAA520";
         case LogSource.ERROR:

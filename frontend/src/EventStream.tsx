@@ -25,7 +25,7 @@ const EventStream: React.FC<EventStreamProps> = ({ logs }) => {
                         style={{ color: logSrcToColor(log.source) }}>
                         <b>{log.source}</b>
                     </span>
-                    ]: {log.msg} (Frame ID: <b>{log.frame_id || 'N/A'}</b>)
+                    ]: {log.msg} {log.frame_id !== null && <span>(Frame ID: <b>{log.frame_id}</b>)</span>}
                 </div>
             ))}
             <div ref={endOfMessagesRef}></div>

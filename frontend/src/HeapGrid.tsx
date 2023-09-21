@@ -10,9 +10,9 @@ interface HeapGridProps {
 const cellStyleMap: Record<CellStatus, string> = {
     [CellStatus.Free]: 'white',
     [CellStatus.ToBeFree]: 'magenta',
-    [CellStatus.Allocated]: 'green',
+    [CellStatus.Allocated]: '#7CCD7C',
     [CellStatus.Marked]: 'yellow',
-    [CellStatus.Used]: 'black',
+    [CellStatus.Used]: '#228B22',
 };
 
 const HeapGrid: React.FC<HeapGridProps> = ({ memory }) => {
