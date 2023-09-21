@@ -30,8 +30,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({toggleExecution, onRestart, 
     return (
         <div className="control-panel">
             <ControlButton className={isRunning ? 'blinking' : ''} label={label + ' (Space)'} onClick={toggleExecution} />
-            {/* <ControlButton label={'Step (Step)'} onClick={() => { }} /> */}
-            <ControlButton label={'Restart (R)'} onClick={onRestart} />
+            <ControlButton label={'Step (s)'} onClick={() => { }} />
+            <ControlButton label={'Restart (r)'} onClick={onRestart} />
         </div>
     );
 }

@@ -9,10 +9,14 @@
 
 .event-log-entry {
     padding: 8px 16px; /* Add some padding around the text for better readability. */
-    background-color: #f4f4f4; /* Light gray background to differentiate each log entry. */
     border-radius: 4px; /* Add rounded corners. */
     font-family: 'Courier New', monospace; /* A monospaced font often looks good for logs. */
     font-size: 14px;
+    transition: background-color 0.3s;  /* Smooth transition effect */
+}
+
+.event-log-entry:hover {
+    background-color: rgba(0, 0, 0, 0.05);  /* A light darkening effect */
 }
 
 .event-stream > .event-log-entry:not(:last-of-type)::after {
@@ -23,16 +27,4 @@
     background-size: 4px 1px;
     margin-top: 8px;
     margin-bottom: 10px;
-}
-
-/* This can be used to highlight specific log types or important logs, for example: */
-.event-log-entry.error {
-    background-color: #ffe5e5; /* Light red background for error logs. */
-    color: #d00;
-    font-weight: bold;
-}
-
-.event-log-entry.warning {
-    background-color: #ffffe5; /* Light yellow background for warning logs. */
-    color: #aa0;
 }
