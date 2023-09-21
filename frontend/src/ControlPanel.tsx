@@ -5,9 +5,10 @@ interface ControlPanelProps {
     toggleExecution: () => void;
     onRestart: () => void;
     isRunning: boolean;
+    onStep: () => void;
 }
 
-const ControlPanel: React.FC<ControlPanelProps> = ({toggleExecution, onRestart, isRunning}) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({ toggleExecution, onRestart, isRunning, onStep }) => {
 
     const label = isRunning ? 'Pause' : 'Run';
 
@@ -17,6 +18,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({toggleExecution, onRestart, 
                 toggleExecution();
             } else if (e.key === 'r') {
                 onRestart();
+            } else if (e.key === 's') {
+                onStep();
             }
         };
 
@@ -26,11 +29,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({toggleExecution, onRestart, 
         return () => {
             window.removeEventListener('keydown', handleKeyPress);
         };
-    }, [toggleExecution, onRestart]);
+    }, [toggleExecution, onRestart, onStep]);
     return (
         <div className="control-panel">
             <ControlButton className={isRunning ? 'blinking' : ''} label={label + ' (Space)'} onClick={toggleExecution} />
-            <ControlButton label={'Step (s)'} onClick={() => { }} />
+            <ControlButton label={'Step (s)'} onClick={onStep} />
             <ControlButton label={'Restart (r)'} onClick={onRestart} />
         </div>
     );

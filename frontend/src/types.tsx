@@ -44,10 +44,9 @@ export interface MemoryCell {
 }
 
 export type WSMsgRequest
-    = { type: 'TICK' }
+    = { type: 'TICK', pause_on_return: boolean }
     | { type: 'RESET' }
-    | { type: 'STEP' }
 
-export const TICK_MSG: WSMsgRequest = { type: 'TICK' }
+export const TICK_MSG: WSMsgRequest = { type: 'TICK', pause_on_return: false }
+export const STEP_MSG: WSMsgRequest = { type: 'TICK', pause_on_return: true }
 export const RESET_MSG: WSMsgRequest = { type: 'RESET' }
-export const STEP_MSG: WSMsgRequest = { type: 'STEP' }

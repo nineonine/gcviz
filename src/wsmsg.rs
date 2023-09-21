@@ -8,12 +8,12 @@ use serde::{
 pub struct WSMessageRequest {
     #[serde(rename = "type")]
     pub msg_type: WSMessageRequestType,
+    pub pause_on_return: bool,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum WSMessageRequestType {
-    RESET,
     TICK,
     STEP,
 }
@@ -23,6 +23,7 @@ pub enum WSMessageResponse {
     Tick {
         memory: Vec<MemoryCell>,
         log_entry: Option<Log>,
+        pause_on_return: bool,
     },
     Halt,
 }
@@ -36,10 +37,15 @@ impl Serialize for WSMessageResponse {
         let mut state = serializer.serialize_struct("WSMessageResponse", 3)?;
 
         match self {
-            WSMessageResponse::Tick { memory, log_entry } => {
+            WSMessageResponse::Tick {
+                memory,
+                log_entry,
+                pause_on_return,
+            } => {
                 state.serialize_field("msgType", "TICK")?;
                 state.serialize_field("memory", memory)?;
                 state.serialize_field("log_entry", log_entry)?;
+                state.serialize_field("pause_on_return", pause_on_return)?;
             }
             WSMessageResponse::Halt => {
                 state.serialize_field("msgType", "HALT")?;
@@ -52,8 +58,16 @@ impl Serialize for WSMessageResponse {
 }
 
 impl WSMessageResponse {
-    pub fn new_tick(memory: Vec<MemoryCell>, log_entry: Option<Log>) -> Self {
-        WSMessageResponse::Tick { memory, log_entry }
+    pub fn new_tick(
+        memory: Vec<MemoryCell>,
+        log_entry: Option<Log>,
+        pause_on_return: bool,
+    ) -> Self {
+        WSMessageResponse::Tick {
+            memory,
+            log_entry,
+            pause_on_return,
+        }
     }
 
     pub fn halt() -> Self {

@@ -5,7 +5,7 @@ import InfoBlock from './InfoBlock';
 import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
-import { CellStatus, MemoryCell, RESET_MSG, TICK_MSG } from './types';
+import { CellStatus, MemoryCell, RESET_MSG, STEP_MSG, TICK_MSG } from './types';
 import { LogEntry, SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logEntry';
 
 const INTERVAL_RATE = 200; // 0.2 second
@@ -37,6 +37,12 @@ const Visualization: React.FC = () => {
         resetViz();
     };
 
+    const stepTick = () => {
+        if (!isRunning && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(STEP_MSG));
+        }
+    }
+
     useEffect(() => {
         // Initialize WebSocket connection only once when component mounts
         const wsConnection = new WebSocket("ws://127.0.0.1:9002");
@@ -57,6 +63,11 @@ const Visualization: React.FC = () => {
                     if (data.memory) {
                         setMemory(data.memory);
                     }
+
+                    if (data.pause_on_return) {
+                        setIsRunning(false);
+                    }
+
                     break;
                 }
                 case 'HALT': {
@@ -96,7 +107,10 @@ const Visualization: React.FC = () => {
                 </div>
                 <HeapGrid memory={memory} />
             </div>
-            <ControlPanel isRunning={isRunning} toggleExecution={toggleExecution} onRestart={handleRestart} />
+            <ControlPanel isRunning={isRunning}
+                toggleExecution={toggleExecution}
+                onRestart={handleRestart}
+                onStep={stepTick} />
         </div>
     );
 }

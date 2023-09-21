@@ -52,6 +52,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                         let msg_resp = WSMessageResponse::new_tick(
                             session.vm.heap.memory.clone(),
                             last_log_entry,
+                            msg.pause_on_return,
                         );
                         let serialized_memory = serde_json::to_string(&msg_resp)
                             .expect("Failed to serialize Tick message");
@@ -64,10 +65,6 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                                 .expect("Failed to serialize Halt message");
                             ws_stream.send(Message::Text(halt_msg)).await?;
                         }
-                    }
-                    WSMessageRequestType::RESET => {
-                        session.restart();
-                        info!("RESET!!!");
                     }
                     WSMessageRequestType::STEP => {
                         info!("STEP!!!");
