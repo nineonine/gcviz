@@ -8,14 +8,14 @@ use serde::{
 pub struct WSMessageRequest {
     #[serde(rename = "type")]
     pub msg_type: WSMessageRequestType,
-    pub pause_on_return: bool,
+    pub pause_on_return: Option<bool>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum WSMessageRequestType {
     TICK,
-    STEP,
+    RESET,
 }
 
 #[derive(Debug, Deserialize)]
@@ -23,7 +23,7 @@ pub enum WSMessageResponse {
     Tick {
         memory: Vec<MemoryCell>,
         log_entry: Option<Log>,
-        pause_on_return: bool,
+        pause_on_return: Option<bool>,
     },
     Halt,
 }
@@ -61,7 +61,7 @@ impl WSMessageResponse {
     pub fn new_tick(
         memory: Vec<MemoryCell>,
         log_entry: Option<Log>,
-        pause_on_return: bool,
+        pause_on_return: Option<bool>,
     ) -> Self {
         WSMessageResponse::Tick {
             memory,

@@ -66,8 +66,8 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                             ws_stream.send(Message::Text(halt_msg)).await?;
                         }
                     }
-                    WSMessageRequestType::STEP => {
-                        info!("STEP!!!");
+                    WSMessageRequestType::RESET => {
+                        session.restart();
                     }
                 },
                 Err(e) => {
