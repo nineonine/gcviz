@@ -8,7 +8,7 @@ import ControlPanel from './ControlPanel';
 import { CellStatus, MemoryCell, RESET_MSG, TICK_MSG } from './types';
 import { LogEntry, SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logEntry';
 
-const INTERVAL_RATE = 100; // 1 second
+const INTERVAL_RATE = 200; // 0.2 second
 
 const Visualization: React.FC = () => {
     const intervalRate = INTERVAL_RATE;

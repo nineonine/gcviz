@@ -1,8 +1,37 @@
 .event-stream {
     padding: 10px;
-    margin: 10px;
+    margin: 0 10px;
     max-height: 80vh; /* Limit the maximum height to 80% of the viewport height */
     overflow-y: auto; /* Make it scrollable vertically */
     border: 1px solid #e0e0e0; /* Light grey border */
     background-color: #f5f5f5; /* A pleasant grey */
+}
+
+.event-log-entry {
+    padding: 8px 16px; /* Add some padding around the text for better readability. */
+    background-color: #f4f4f4; /* Light gray background to differentiate each log entry. */
+    border-radius: 4px; /* Add rounded corners. */
+    font-family: 'Courier New', monospace; /* A monospaced font often looks good for logs. */
+    font-size: 14px;
+}
+
+.event-stream > .event-log-entry:not(:last-of-type)::after {
+    content: "";
+    display: block;
+    height: 1px;
+    background-image: linear-gradient(to right, #ddd 50%, transparent 50%);
+    background-size: 4px 1px;
+    margin-top: 8px;
+}
+
+/* This can be used to highlight specific log types or important logs, for example: */
+.event-log-entry.error {
+    background-color: #ffe5e5; /* Light red background for error logs. */
+    color: #d00;
+    font-weight: bold;
+}
+
+.event-log-entry.warning {
+    background-color: #ffffe5; /* Light yellow background for warning logs. */
+    color: #aa0;
 }

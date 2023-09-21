@@ -46,19 +46,8 @@ impl Log {
         json!({
             "frameId": self.frame_id,
             "source": format!("{:?}", self.source),
-            "msg": &self.msg,
-            "color": log_src_to_color(&self.source)
+            "msg": &self.msg
         })
-    }
-}
-
-fn log_src_to_color(source: &LogSource) -> &'static str {
-    match source {
-        LogSource::GC => "#FF0000",
-        LogSource::MUT => "#00FF00",
-        LogSource::ALLOC => "#0000FF",
-        LogSource::VM => "#FFFF00",
-        LogSource::ERROR => "#FF00FF",
     }
 }
 

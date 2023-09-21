@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './EventStream.css';
-import { LogEntry } from './logEntry';
+import { LogEntry, logSrcToColor } from './logEntry';
 
 interface EventStreamProps {
     logs: LogEntry[];
@@ -18,7 +18,15 @@ const EventStream: React.FC<EventStreamProps> = ({ logs }) => {
     return (
         <div className="event-stream">
             {logs.map((log, index) => (
-                <p key={index}>{log.msg} (Source: {log.source}, Frame ID: {log.frame_id || 'N/A'})</p>
+                <div className='event-log-entry' key={index}>
+                    [
+                    <span
+                        className="log-source"
+                        style={{ color: logSrcToColor(log.source) }}>
+                        <b>{log.source}</b>
+                    </span>
+                    ]: {log.msg} (Frame ID: <b>{log.frame_id || 'N/A'}</b>)
+                </div>
             ))}
             <div ref={endOfMessagesRef}></div>
         </div>
