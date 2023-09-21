@@ -6,23 +6,6 @@ export enum CellStatus {
     Used = "Used"
 }
 
-export function pprCellStatus(status: CellStatus): string {
-    switch (status) {
-        case CellStatus.Free:
-            return "Free";
-        case CellStatus.ToBeFree:
-            return "To Be Freed";
-        case CellStatus.Allocated:
-            return "Allocated";
-        case CellStatus.Marked:
-            return "Marked";
-        case CellStatus.Used:
-            return "Used";
-        default:
-            throw new Error('pprCellStatus');
-    }
-}
-
 export type Session = {
     program: Program
 }
@@ -37,7 +20,6 @@ type Instruction
 
 type ObjectAddr = number;
 type Value = number;
-
 
 export interface MemoryCell {
     status: CellStatus;
