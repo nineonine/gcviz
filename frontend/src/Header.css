@@ -1,6 +1,7 @@
 .header {
     background-color: #f5f5f5;  /* A pleasant grey */
     padding: 10px 10px;
+    margin-bottom: 5px;
 }
 
 .nav-list {
