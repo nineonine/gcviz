@@ -1,9 +1,10 @@
 .info-block {
     padding: 10px;
-    margin: 10px 10px 0 10px;;
-    border: 1px solid #e0e0e0; /* Light grey border */
-    background-color: #f5f5f5; /* A pleasant grey */
-    margin-bottom: 15px; /* Space between InfoBlock and the component below */
+    margin: 10px;
+    border: 1px solid #e0e0e0;
+    /* Light grey border */
+    background-color: #f5f5f5;
+    /* A pleasant grey */
     display: flex;
     flex-direction: column;
 }

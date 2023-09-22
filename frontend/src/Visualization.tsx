@@ -7,11 +7,12 @@ import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
 import { CellStatus, MemoryCell, RESET_MSG, STEP_MSG, TICK_MSG } from './types';
 import { LogEntry, SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logEntry';
+import Slider from './Slider';
 
-const INTERVAL_RATE = 200; // 0.2 second
+const INTERVAL_RATE = 100; // 0.2 second
 
 const Visualization: React.FC = () => {
-    const intervalRate = INTERVAL_RATE;
+    const [intervalRate, setIntervalRate] = React.useState<number>(INTERVAL_RATE);
     const [ws, setWs] = useState<WebSocket | null>(null);
     const [memory, setMemory] = useState<Array<MemoryCell>>(new Array(0).fill({ status: CellStatus.Free }));
     const [isRunning, setIsRunning] = useState(false);
@@ -82,7 +83,7 @@ const Visualization: React.FC = () => {
         return () => {
             wsConnection.close();
         };
-    }, [intervalRate]);
+    }, []);
 
     useEffect(() => {
         let intervalId: any = null;
@@ -103,6 +104,7 @@ const Visualization: React.FC = () => {
             <div className="top-section">
                 <div className="left-panel">
                     <InfoBlock />
+                    <Slider minValue={100} maxValue={2000} intervalRate={intervalRate} updateIntervalRate={setIntervalRate}/>
                     <EventStream logs={eventLogs} />
                 </div>
                 <HeapGrid memory={memory} />

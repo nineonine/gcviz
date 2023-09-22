@@ -35,6 +35,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
     let mut ws_stream = accept_async(stream).await.expect("Failed to accept");
     info!("New WebSocket connection: {}", peer);
     let mut session: Session = init_session().unwrap();
+    let mut already_said_halt: bool = false;
 
     while let Some(msg) = ws_stream.next().await {
         let msg = msg?;
@@ -59,14 +60,16 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                         ws_stream.send(Message::Text(serialized_memory)).await?;
 
                         // All instructions/events processed - stop program execution
-                        if session.instr_ptr == session.program.len() {
+                        if session.instr_ptr == session.program.len() && !already_said_halt {
                             debug!("Program halted");
                             let halt_msg = serde_json::to_string(&WSMessageResponse::halt())
                                 .expect("Failed to serialize Halt message");
                             ws_stream.send(Message::Text(halt_msg)).await?;
+                            already_said_halt = true;
                         }
                     }
                     WSMessageRequestType::RESET => {
+                        already_said_halt = false;
                         session.restart();
                     }
                 },
