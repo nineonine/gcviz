@@ -1,18 +1,4 @@
-export interface LogEntry {
-    frame_id: number | null;
-    msg: string;
-    source: LogSource;
-}
-
-
-export enum LogSource {
-    GC = "GC",
-    MUT = "MUT",
-    ALLOC = "ALLOC",
-    VM = "VM",
-    ERROR = "ERROR",
-    CLIENT = "CLIENT"
-}
+import { LogEntry, LogSource } from "./types";
 
 export const SUGGEST_INIT_LOG_ENTRY: LogEntry = {
     frame_id: null,

@@ -8,9 +8,9 @@ use serde_json::to_value;
 use gcviz::{
     error::VMError,
     file_utils::{load_heap_from_file, load_program_from_file, save_heap_snapshot},
-    frame::Program,
     gc::GCType,
     heap::Heap,
+    instr::Program,
     session::{LogDestination, Session},
     simulator::Parameters,
 };

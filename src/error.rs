@@ -6,6 +6,7 @@ pub enum VMError {
     SegmentationFault,
     NullPointerException(String),
     GCError,
+    UnknownError,
 }
 
 impl fmt::Display for VMError {
@@ -17,6 +18,7 @@ impl fmt::Display for VMError {
                 write!(f, "Null pointer exception: {detail}")
             }
             VMError::GCError => write!(f, "Garbage collector error"),
+            VMError::UnknownError => write!(f, "UnknownError error"),
         }
     }
 }

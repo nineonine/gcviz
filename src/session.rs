@@ -2,9 +2,9 @@ use std::{collections::VecDeque, error};
 
 use crate::{
     error::VMError,
-    frame::{FrameResult, Program},
     gc::{init_collector, GCType},
     heap::{CellStatus, MemoryCell},
+    instr::{InstrResult, Program},
     log::{Log, LogSource, LOG_CAPACITY},
     simulator::Parameters,
     vm::VirtualMachine,
@@ -59,12 +59,12 @@ impl Session {
     }
 
     /// program interpretation step
-    pub fn tick(&mut self) -> Result<(), VMError> {
+    pub fn tick(&mut self) -> Result<InstrResult, VMError> {
         if let Some(instruction) = self.program.get(self.instr_ptr) {
             match self.vm.tick(instruction) {
                 Ok(instr_result) => {
-                    match instr_result {
-                        FrameResult::AllocResult(object, addr) => {
+                    match &instr_result {
+                        InstrResult::Allocate { object, addr } => {
                             self.enqueue_log(Log::new(
                                 format!("{object} at 0x{addr:X}"),
                                 LogSource::ALLOC,
@@ -72,27 +72,27 @@ impl Session {
                             ));
                             Self::visualize_allocation(
                                 &mut self.vm.heap.memory,
-                                addr,
+                                *addr,
                                 object.size(),
                             );
                         }
-                        FrameResult::ReadResult(addr, result) => {
+                        InstrResult::Read { addr, value } => {
                             self.enqueue_log(Log::new(
-                                format!("Read value from 0x{addr:X}. Value: {result}"),
+                                format!("Read value from 0x{addr:X}. Value: {value}"),
                                 LogSource::MUT,
                                 Some(self.instr_ptr),
                             ));
-                            Self::visualize_mutator(&mut self.vm.heap.memory, addr);
+                            Self::visualize_mutator(&mut self.vm.heap.memory, *addr);
                         }
-                        FrameResult::WriteResult(addr, value) => {
+                        InstrResult::Write { addr, value } => {
                             self.enqueue_log(Log::new(
                                 format!("Write value {value:} to 0x{addr:X}"),
                                 LogSource::MUT,
                                 Some(self.instr_ptr),
                             ));
-                            Self::visualize_mutator(&mut self.vm.heap.memory, addr);
+                            Self::visualize_mutator(&mut self.vm.heap.memory, *addr);
                         }
-                        FrameResult::GCResult(stats) => {
+                        InstrResult::GC { stats } => {
                             self.enqueue_log(Log::new(
                                 format!("Collect garbage. Stats: {stats:?}"),
                                 LogSource::GC,
@@ -101,6 +101,7 @@ impl Session {
                         }
                     }
                     self.instr_ptr += 1;
+                    return Ok(instr_result);
                 }
                 Err(e) => {
                     let err_log =
@@ -113,7 +114,7 @@ impl Session {
                 }
             }
         }
-        Ok(())
+        Err(VMError::UnknownError)
     }
 
     pub fn restart(&mut self) {

@@ -5,13 +5,17 @@ objects:
   0:
     header: {}
     fields:
-    - !Scalar 1
-    - !Scalar 2
+    - !Scalar
+      value: 1
+    - !Scalar
+      value: 2
   4:
     header: {}
     fields:
-    - !Scalar 3
-    - !Scalar 4
+    - !Scalar
+      value: 3
+    - !Scalar
+      value: 4
 free_list:
 - - 2
   - 2

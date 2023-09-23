@@ -6,20 +6,21 @@ export enum CellStatus {
     Used = "Used"
 }
 
-export type Session = {
-    program: Program
-}
-
-type Program = Instruction[];
-
-type Instruction
-    = { _type: 'Allocate', object: Object }
-    | { _type: 'Read', object: ObjectAddr }
-    | { _type: 'Write', addr: ObjectAddr, payload: Value }
+export type InstrResult
+    = { _type: 'Allocate'; addr: number, object: Object }
+    | { _type: 'Read'; addr: number }
+    | { _type: 'Write'; addr: number, value: Value }
     | { _type: 'GC' }
 
-type ObjectAddr = number;
+interface Object {
+    header: {};
+    fields: Field[];
+}
+
+type Field = { ref: number } | { scalar: number };
+
 type Value = number;
+
 
 export interface MemoryCell {
     status: CellStatus;
@@ -32,3 +33,22 @@ export type WSMsgRequest
 export const TICK_MSG: WSMsgRequest = { type: 'TICK', pause_on_return: false }
 export const STEP_MSG: WSMsgRequest = { type: 'TICK', pause_on_return: true }
 export const RESET_MSG: WSMsgRequest = { type: 'RESET' }
+
+
+export interface LogEntry {
+    frame_id: number | null;
+    msg: string;
+    source: LogSource;
+    InstrResult?: InstrResult;
+}
+
+export enum LogSource {
+    GC = "GC",
+    MUT = "MUT",
+    ALLOC = "ALLOC",
+    VM = "VM",
+    ERROR = "ERROR",
+    CLIENT = "CLIENT"
+}
+
+export type EventLogDetails = [LogEntry, InstrResult | undefined];

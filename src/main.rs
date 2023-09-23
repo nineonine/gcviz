@@ -14,7 +14,7 @@ use gcviz::session::{LogDestination, Session, SessionResult};
 use gcviz::simulator::{Parameters, Simulator};
 use gcviz::{file_utils::load_program_from_file, wsmsg::WSMessageResponse};
 use gcviz::{
-    frame::Program,
+    instr::Program,
     wsmsg::{WSMessageRequest, WSMessageRequestType},
 };
 
@@ -48,28 +48,38 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                             // if program execution is done - don't execute
                             continue;
                         }
-                        if let Err(e) = session.tick() {
-                            error!("tick panic: {}", e);
-                        }
-                        let last_log_entry = session.logs.back().cloned().clone();
-                        debug!("{} {:?}", session.instr_ptr, last_log_entry);
-                        // Serialize the heap's memory and send it to the client.
-                        let msg_resp = WSMessageResponse::new_tick(
-                            session.vm.heap.memory.clone(),
-                            last_log_entry,
-                            msg.pause_on_return,
-                        );
-                        let serialized_memory = serde_json::to_string(&msg_resp)
-                            .expect("Failed to serialize Tick message");
-                        ws_stream.send(Message::Text(serialized_memory)).await?;
+                        match session.tick() {
+                            Ok(instr_result) => {
+                                let last_log_entry = session.logs.back().cloned().clone();
+                                debug!(
+                                    "{}. [TICK]: {:?}; {:?}",
+                                    session.instr_ptr, last_log_entry, instr_result
+                                );
+                                // Serialize the heap's memory and send it to the client.
+                                let msg_resp = WSMessageResponse::new_tick(
+                                    session.vm.heap.memory.clone(),
+                                    last_log_entry,
+                                    msg.pause_on_return,
+                                    Some(instr_result),
+                                );
+                                let serialized_memory = serde_json::to_string(&msg_resp)
+                                    .expect("Failed to serialize Tick message");
+                                ws_stream.send(Message::Text(serialized_memory)).await?;
 
-                        // All instructions/events processed - stop program execution
-                        if session.instr_ptr == session.program.len() && !already_said_halt {
-                            debug!("Program halted");
-                            let halt_msg = serde_json::to_string(&WSMessageResponse::halt())
-                                .expect("Failed to serialize Halt message");
-                            ws_stream.send(Message::Text(halt_msg)).await?;
-                            already_said_halt = true;
+                                // All instructions/events processed - stop program execution
+                                if session.instr_ptr == session.program.len() && !already_said_halt
+                                {
+                                    info!("Program halted");
+                                    let halt_msg =
+                                        serde_json::to_string(&WSMessageResponse::halt())
+                                            .expect("Failed to serialize Halt message");
+                                    ws_stream.send(Message::Text(halt_msg)).await?;
+                                    already_said_halt = true;
+                                }
+                            }
+                            Err(e) => {
+                                error!("tick panic: {}", e);
+                            }
                         }
                     }
                     WSMessageRequestType::RESET => {

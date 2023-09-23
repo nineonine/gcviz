@@ -1,10 +1,16 @@
-- !Allocate
-  header: {}
-  fields:
-    - !Scalar 1
-    - !Scalar 2
-- !Allocate
-  header: {}
-  fields:
-    - !Scalar 3
-    - !Scalar 4
+- _type: Allocate
+  object:
+    header: {}
+    fields:
+      - Scalar:
+          value: 1
+      - Scalar:
+          value: 2
+- _type: Allocate
+  object:
+    header: {}
+    fields:
+      - Scalar:
+          value: 3
+      - Scalar:
+          value: 4

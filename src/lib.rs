@@ -8,7 +8,7 @@ pub mod heap;
 pub mod mutator;
 
 /// Program representation.
-pub mod frame;
+pub mod instr;
 
 /// Object type
 pub mod object;

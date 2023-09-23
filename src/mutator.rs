@@ -33,13 +33,13 @@ impl Mutator {
             .ok_or(VMError::SegmentationFault)?;
 
         match field {
-            Field::Ref(addr) => match addr {
+            Field::Ref { addr } => match addr {
                 Address::Ptr(a) => self.read(heap, *a),
                 Address::Null => Err(VMError::NullPointerException(format!(
                     "Attempted to dereference NULL address at 0x{address:X}",
                 ))),
             },
-            Field::Scalar(value) => Ok(*value),
+            Field::Scalar { value } => Ok(*value),
         }
     }
 
@@ -57,11 +57,11 @@ impl Mutator {
             .ok_or(VMError::SegmentationFault)?;
 
         match field {
-            Field::Ref(addr) => {
+            Field::Ref { addr } => {
                 *addr = Address::Ptr(value);
                 Ok(())
             }
-            Field::Scalar(val) => {
+            Field::Scalar { value: val } => {
                 *val = value;
                 Ok(())
             }

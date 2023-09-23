@@ -4,8 +4,8 @@ use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom
 
 use crate::{
     error::VMError,
-    frame::{Instruction, Program},
     gc::{init_collector, GCType},
+    instr::{Instruction, Program},
     object::{Field, ObjAddr, Object},
     vm::VirtualMachine,
 };
@@ -109,7 +109,7 @@ impl Simulator {
             .allocator
             .allocate(&mut self.vm.heap, object.clone())
         {
-            Ok(_) => Instruction::Allocate(object),
+            Ok(_) => Instruction::Allocate { object },
             Err(_) => panic!("gen_allocate"),
         }
     }
@@ -123,7 +123,7 @@ impl Simulator {
                 .fields
                 .iter()
                 .enumerate()
-                .filter(|(_, field)| matches!(field, Field::Scalar(_)))
+                .filter(|(_, field)| matches!(field, Field::Scalar { value: _ }))
                 .map(|(idx, _)| idx)
                 .collect::<Vec<_>>();
 
@@ -132,7 +132,9 @@ impl Simulator {
                 self.gen_allocate()
             } else {
                 let field_offset = valid_indexes.choose(&mut rng).unwrap();
-                Instruction::Read(obj_addr + field_offset)
+                Instruction::Read {
+                    addr: obj_addr + field_offset,
+                }
             }
         } else {
             // If there are no objects in the heap, just allocate
@@ -178,7 +180,7 @@ impl Simulator {
                             && self.vm.heap.objects[a]
                                 .fields
                                 .iter()
-                                .any(|field| matches!(field, Field::Scalar(_)))
+                                .any(|field| matches!(field, Field::Scalar { value: _ }))
                     })
                     .collect();
 
@@ -191,7 +193,10 @@ impl Simulator {
             };
 
             match self.vm.mutator.write(&mut self.vm.heap, address, value) {
-                Ok(_) => Instruction::Write(address, value),
+                Ok(_) => Instruction::Write {
+                    addr: address,
+                    value,
+                },
                 Err(e) => match e {
                     VMError::AllocationError => Instruction::GC,
                     _ => panic!("gen_write"),

@@ -1,4 +1,4 @@
-use crate::{heap::MemoryCell, log::Log};
+use crate::{heap::MemoryCell, instr::InstrResult, log::Log};
 use serde::{
     ser::{SerializeStruct, Serializer},
     Deserialize, Serialize,
@@ -24,6 +24,7 @@ pub enum WSMessageResponse {
         memory: Vec<MemoryCell>,
         log_entry: Option<Log>,
         pause_on_return: Option<bool>,
+        instr_result: Option<InstrResult>,
     },
     Halt,
 }
@@ -41,11 +42,13 @@ impl Serialize for WSMessageResponse {
                 memory,
                 log_entry,
                 pause_on_return,
+                instr_result,
             } => {
                 state.serialize_field("msgType", "TICK")?;
                 state.serialize_field("memory", memory)?;
                 state.serialize_field("log_entry", log_entry)?;
                 state.serialize_field("pause_on_return", pause_on_return)?;
+                state.serialize_field("instr_result", instr_result)?;
             }
             WSMessageResponse::Halt => {
                 state.serialize_field("msgType", "HALT")?;
@@ -62,11 +65,13 @@ impl WSMessageResponse {
         memory: Vec<MemoryCell>,
         log_entry: Option<Log>,
         pause_on_return: Option<bool>,
+        instr_result: Option<InstrResult>,
     ) -> Self {
         WSMessageResponse::Tick {
             memory,
             log_entry,
             pause_on_return,
+            instr_result,
         }
     }
 

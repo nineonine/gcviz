@@ -2,8 +2,8 @@ use crate::gc::GarbageCollector;
 use crate::{allocator::Allocator, heap::Heap, mutator::Mutator};
 use crate::{
     error::VMError,
-    frame::{
-        FrameResult,
+    instr::{
+        InstrResult,
         Instruction::{self, Allocate, Read, Write, GC},
     },
 };
@@ -25,21 +25,32 @@ impl VirtualMachine {
         }
     }
 
-    pub fn tick(&mut self, instr: &Instruction) -> Result<FrameResult, VMError> {
+    pub fn tick(&mut self, instr: &Instruction) -> Result<InstrResult, VMError> {
         match instr {
-            Allocate(obj) => self
-                .allocator
-                .allocate(&mut self.heap, obj.clone())
-                .map(|addr| FrameResult::AllocResult(obj.clone(), addr)),
-            Read(addr) => self
+            Allocate { object } => {
+                self.allocator
+                    .allocate(&mut self.heap, object.clone())
+                    .map(|addr| InstrResult::Allocate {
+                        object: object.clone(),
+                        addr,
+                    })
+            }
+            Read { addr } => self
                 .mutator
                 .read(&self.heap, *addr)
-                .map(|res| FrameResult::ReadResult(*addr, res)),
-            Write(addr, value) => self
-                .mutator
-                .write(&mut self.heap, *addr, *value)
-                .map(|()| FrameResult::WriteResult(*addr, *value)),
-            GC => self.collector.collect().map(FrameResult::GCResult),
+                .map(|value| InstrResult::Read { addr: *addr, value }),
+            Write { addr, value } => {
+                self.mutator
+                    .write(&mut self.heap, *addr, *value)
+                    .map(|()| InstrResult::Write {
+                        addr: *addr,
+                        value: *value,
+                    })
+            }
+            GC => self
+                .collector
+                .collect()
+                .map(|stats| InstrResult::GC { stats }),
         }
     }
 }

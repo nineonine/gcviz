@@ -1,5 +1,5 @@
 use rand::Rng;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 
 pub type ObjAddr = usize;
@@ -8,6 +8,7 @@ pub type Value = usize;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Object {
     #[allow(dead_code)]
+    #[serde(rename = "header")]
     header: ObjHeader,
     pub fields: Vec<Field>,
 }
@@ -27,9 +28,13 @@ impl Object {
         let fields: Vec<Field> = (0..num_fields)
             .map(|_| {
                 if rng.gen_bool(0.5) {
-                    Field::Ref(Address::Null)
+                    Field::Ref {
+                        addr: Address::Null,
+                    }
                 } else {
-                    Field::Scalar(rng.gen_range(0..=9))
+                    Field::Scalar {
+                        value: rng.gen_range(0..=9),
+                    }
                 }
             })
             .collect();
@@ -62,23 +67,57 @@ struct ObjHeader {}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Field {
-    Ref(Address),
-    Scalar(Value),
+    Ref { addr: Address },
+    Scalar { value: Value },
 }
 
 impl fmt::Display for Field {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Field::Ref(addr) => write!(f, "({addr})"),
-            Field::Scalar(value) => write!(f, "{value}"),
+            Field::Ref { addr } => write!(f, "({addr})"),
+            Field::Scalar { value } => write!(f, "{value}"),
         }
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub enum Address {
     Ptr(ObjAddr),
     Null,
+}
+
+impl Serialize for Address {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Address::Ptr(addr) => {
+                let value = serde_json::json!({ "ptr": *addr });
+                value.serialize(serializer)
+            }
+            Address::Null => serializer.serialize_none(),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Address {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum AddressHelper {
+            Ptr { ptr: ObjAddr },
+            Null(String),
+        }
+
+        match AddressHelper::deserialize(deserializer)? {
+            AddressHelper::Ptr { ptr } => Ok(Address::Ptr(ptr)),
+            AddressHelper::Null(_) => Ok(Address::Null),
+        }
+    }
 }
 
 impl fmt::Display for Address {

@@ -5,7 +5,7 @@ const InfoBlock: React.FC = () => {
     return (
         <div className='info-block'>
             <InfoEntry label={'GC Type'} value={"MarkSweep"} />
-            <InfoEntry label={'Aligntment'} value={"16"} />
+            <InfoEntry label={'Alignment'} value={"16"} />
             <InfoEntry label={'Heap size'} value={"1024"} />
             <InfoEntry label={'Allocated objects'} value={"10"} />
             <InfoEntry label={'Free memory'} value={"1024"} />

@@ -1,3 +1,4 @@
+use log::debug;
 use serde_json::Error as SerdeJsonError;
 use serde_yaml::Error as SerdeYamlError;
 use std::error::Error;
@@ -9,7 +10,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use crate::{frame::Program, heap::Heap};
+use crate::{heap::Heap, instr::Program};
 
 #[derive(Debug)]
 pub enum CustomError {
@@ -76,6 +77,7 @@ pub fn load_program_from_file(filename: &str) -> Result<Program, CustomError> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Failed to read program from file");
+    debug!("contents: {contents}");
     serde_yaml::from_str(&contents).map_err(CustomError::from)
 }
 
