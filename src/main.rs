@@ -44,6 +44,10 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
             match request {
                 Ok(msg) => match msg.msg_type {
                     WSMessageRequestType::TICK => {
+                        if already_said_halt {
+                            // if program execution is done - don't execute
+                            continue;
+                        }
                         if let Err(e) = session.tick() {
                             error!("tick panic: {}", e);
                         }
