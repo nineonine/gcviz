@@ -1,7 +1,7 @@
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info};
-use std::env;
 use std::net::SocketAddr;
+use std::{collections::VecDeque, env};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::{
     accept_async,
@@ -9,10 +9,10 @@ use tokio_tungstenite::{
 };
 use tungstenite::Message;
 
-use gcviz::gc::GCType;
 use gcviz::session::{LogDestination, Session, SessionResult};
-use gcviz::simulator::{Parameters, Simulator};
-use gcviz::{file_utils::load_program_from_file, wsmsg::WSMessageResponse};
+use gcviz::simulator::Parameters;
+use gcviz::{file_utils, wsmsg::WSMessageResponse};
+use gcviz::{file_utils::CustomError, gc::GCType};
 use gcviz::{
     instr::Program,
     wsmsg::{WSMessageRequest, WSMessageRequestType},
@@ -34,8 +34,8 @@ async fn accept_connection(peer: SocketAddr, stream: TcpStream) {
 async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
     let mut ws_stream = accept_async(stream).await.expect("Failed to accept");
     info!("New WebSocket connection: {}", peer);
-    let mut session: Session = init_session().unwrap();
     let mut already_said_halt: bool = false;
+    let mut session: Session = init_session().unwrap();
 
     while let Some(msg) = ws_stream.next().await {
         let msg = msg?;
@@ -43,7 +43,10 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
             let request: Result<WSMessageRequest, _> = serde_json::from_str(msg.to_text()?);
             match request {
                 Ok(msg) => match msg.msg_type {
-                    WSMessageRequestType::TICK => {
+                    WSMessageRequestType::LoadProgram => {
+                        load_program(&mut session, msg.program_name).unwrap();
+                    }
+                    WSMessageRequestType::Tick => {
                         if already_said_halt {
                             // if program execution is done - don't execute
                             continue;
@@ -82,7 +85,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                             }
                         }
                     }
-                    WSMessageRequestType::RESET => {
+                    WSMessageRequestType::Reset => {
                         already_said_halt = false;
                         session.restart();
                     }
@@ -100,7 +103,6 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
 #[tokio::main]
 async fn main() -> SessionResult<()> {
     env_logger::init();
-    info!("RUN");
 
     // WebSocket server setup
     let addr = "127.0.0.1:9002";
@@ -119,31 +121,41 @@ async fn main() -> SessionResult<()> {
 }
 
 fn init_session() -> SessionResult<Session> {
-    // Check command line arguments for a program file name.
-    let args: Vec<String> = env::args().collect();
-    // Create an running program session.
     let sim_params = Parameters::new(HEAP_SIZE, ALIGNMENT, NUM_FRAMES);
     let gc_type = GCType::MarkSweep;
-    let program: Program = if args.len() > 1 {
-        load_program_from_file(&args[1])?
-    } else {
-        let mut sim = Simulator::new(sim_params.clone(), &gc_type);
-        info!("Generating program using simulation params");
-        sim.gen_program()
-        // match save_program_to_file(&program) {
-        //     Ok(filename) => println!("Program saved to {}", filename),
-        //     Err(e) => eprintln!("Failed to save program: {}", e),
-        // }
-    };
-
     let session = Session::new(
         HEAP_SIZE,
         ALIGNMENT,
-        &gc_type,
-        program,
+        gc_type,
+        VecDeque::new(),
         sim_params,
         LogDestination::EventStream,
     );
 
     Ok(session)
+}
+
+///
+/// 1. If `file_name` is provided, it loads the program from the specified file.
+/// 2. If `file_name` is not provided, it checks the environment variable `PROGRAM_FILE`
+///    for a file name and attempts to load the program from this file.
+/// 3. If neither `file_name` nor the environment variable provide a valid source,
+///    the function generates a random program.
+///
+fn load_program(session: &mut Session, file_name: Option<String>) -> Result<(), CustomError> {
+    let program: Program = if let Some(fname) = file_name {
+        // Load program using provided file name.
+        info!("Loading program from provided file name: {}", fname);
+        file_utils::load_program(&fname)
+    } else if let Ok(env_file) = env::var("PROGRAM_FILE") {
+        // Load program from environment variable.
+        info!("Loading program from environment variable: {}", env_file);
+        file_utils::load_program(&env_file)
+    } else {
+        // Generate a new program.
+        info!("Generating program using simulation params");
+        session.gen_program()
+    };
+    session.program = program;
+    Ok(())
 }

@@ -1,33 +1,17 @@
-use std::{env, path::PathBuf};
+use std::env;
 
-use lazy_static::lazy_static;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
 use serde_json::to_value;
 
 use gcviz::{
     error::VMError,
-    file_utils::{load_heap_from_file, load_program_from_file, save_heap_snapshot},
+    file_utils::{load_heap_snapshot, load_program, save_heap_snapshot, CURRENT_DIR},
     gc::GCType,
-    heap::Heap,
     instr::Program,
     session::{LogDestination, Session},
     simulator::Parameters,
 };
-
-lazy_static! {
-    pub static ref CURRENT_DIR: PathBuf = env::current_dir().unwrap();
-}
-
-fn load_program(file_name: &str) -> Program {
-    let path = format!("{}/tests/{file_name}.yaml", CURRENT_DIR.display());
-    load_program_from_file(path.as_str()).unwrap()
-}
-
-fn load_heap_snapshot(file_name: &str) -> Heap {
-    let path = format!("{}/tests/{file_name}_snapshot.yaml", CURRENT_DIR.display());
-    load_heap_from_file(path.as_str()).unwrap()
-}
 
 fn init_test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCType) -> Session {
     let program: Program = load_program(test_name);
@@ -35,7 +19,7 @@ fn init_test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCTyp
     Session::new(
         heap_size,
         alignment,
-        &gc_type,
+        gc_type,
         program,
         sim_params,
         LogDestination::Stdout,

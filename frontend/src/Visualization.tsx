@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import './Visualization.css';
+import { useParams } from 'react-router-dom';
 
+import './Visualization.css';
 import InfoBlock from './InfoBlock';
 import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
 import { CellStatus, MemoryCell, EventLogDetails, RESET_MSG, STEP_MSG, TICK_MSG } from './types';
-import { SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logUtils';
 import Slider from './Slider';
+import Toast from './Toast';
+
+import { SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logUtils';
 import useHighlightState from './useHightlightState';
 
-const INTERVAL_RATE = 100; // 0.2 second
+const INTERVAL_RATE = 100; // 0.1 seconds
 
 const Visualization: React.FC = () => {
     const [intervalRate, setIntervalRate] = React.useState<number>(INTERVAL_RATE);
@@ -24,7 +27,8 @@ const Visualization: React.FC = () => {
         highlightCells,
         clearHighlightedCells,
     } = useHighlightState();
-
+    const { program_name } = useParams<{ program_name?: string }>();
+    const [toastMessage, setToastMessage] = useState<string>('');
 
     const toggleExecution = () => {
         if (isHalt) return;
@@ -51,13 +55,27 @@ const Visualization: React.FC = () => {
         }
     }
 
+    const closeToast = () => {
+        setToastMessage('');
+    };
+
     useEffect(() => {
         // Initialize WebSocket connection only once when component mounts
         const wsConnection = new WebSocket("ws://127.0.0.1:9002");
         setWs(wsConnection);
 
+        wsConnection.onopen = () => {
+            console.log("LOAD_PROGRAM", program_name)
+            wsConnection.send(JSON.stringify({
+                type: 'LoadProgram',
+                program_name
+            }));
+        };
+
         wsConnection.onerror = (error) => {
             console.error("WebSocket Error", error);
+            let msg = "WebSocket connection error. Please refresh the page.";
+            setToastMessage(msg);
         };
 
         wsConnection.onmessage = (event) => {
@@ -92,7 +110,7 @@ const Visualization: React.FC = () => {
         return () => {
             wsConnection.close();
         };
-    }, []);
+    }, [program_name]);
 
     useEffect(() => {
         let intervalId: any = null;
@@ -110,6 +128,7 @@ const Visualization: React.FC = () => {
 
     return (
         <div className="visualization">
+            <Toast show={toastMessage !== ''} message={toastMessage} onClose={closeToast} />
             <div className="top-section">
                 <div className="left-panel">
                     <InfoBlock />

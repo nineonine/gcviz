@@ -27,12 +27,13 @@ export interface MemoryCell {
 }
 
 export type WSMsgRequest
-    = { type: 'TICK', pause_on_return: boolean }
-    | { type: 'RESET' }
+    = { type: 'Tick', pause_on_return: boolean }
+    | { type: 'Reset' }
+    | { type: 'LoadProgram', program_name: string }
 
-export const TICK_MSG: WSMsgRequest = { type: 'TICK', pause_on_return: false }
-export const STEP_MSG: WSMsgRequest = { type: 'TICK', pause_on_return: true }
-export const RESET_MSG: WSMsgRequest = { type: 'RESET' }
+export const TICK_MSG: WSMsgRequest = { type: 'Tick', pause_on_return: false }
+export const STEP_MSG: WSMsgRequest = { type: 'Tick', pause_on_return: true }
+export const RESET_MSG: WSMsgRequest = { type: 'Reset' }
 
 
 export interface LogEntry {

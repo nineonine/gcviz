@@ -9,13 +9,14 @@ pub struct WSMessageRequest {
     #[serde(rename = "type")]
     pub msg_type: WSMessageRequestType,
     pub pause_on_return: Option<bool>,
+    pub program_name: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "UPPERCASE")]
 pub enum WSMessageRequestType {
-    TICK,
-    RESET,
+    Tick,
+    Reset,
+    LoadProgram,
 }
 
 #[derive(Debug, Deserialize)]

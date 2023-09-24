@@ -1,8 +1,8 @@
-use log::debug;
+use lazy_static::lazy_static;
 use serde_json::Error as SerdeJsonError;
 use serde_yaml::Error as SerdeYamlError;
-use std::error::Error;
-use std::fmt;
+use std::{env, fmt};
+use std::{error::Error, path::PathBuf};
 
 use std::{
     fs::File,
@@ -72,19 +72,32 @@ pub fn save_heap_snapshot(heap: &Heap, test_path: &str) -> Result<String, Custom
     Ok(filename)
 }
 
-pub fn load_program_from_file(filename: &str) -> Result<Program, CustomError> {
+fn load_program_from_file(filename: &str) -> Result<Program, CustomError> {
     let mut file = File::open(filename).expect("Failed to open file");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Failed to read program from file");
-    debug!("contents: {contents}");
     serde_yaml::from_str(&contents).map_err(CustomError::from)
 }
 
-pub fn load_heap_from_file(filename: &str) -> Result<Heap, CustomError> {
+fn load_heap_from_file(filename: &str) -> Result<Heap, CustomError> {
     let mut file = File::open(filename).expect("Failed to open file");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Failed to read heap from file");
     serde_yaml::from_str(&contents).map_err(CustomError::from)
+}
+
+lazy_static! {
+    pub static ref CURRENT_DIR: PathBuf = env::current_dir().unwrap();
+}
+
+pub fn load_program(file_name: &str) -> Program {
+    let path = format!("{}/tests/{file_name}.yaml", CURRENT_DIR.display());
+    load_program_from_file(path.as_str()).unwrap()
+}
+
+pub fn load_heap_snapshot(file_name: &str) -> Heap {
+    let path = format!("{}/tests/{file_name}_snapshot.yaml", CURRENT_DIR.display());
+    load_heap_from_file(path.as_str()).unwrap()
 }

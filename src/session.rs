@@ -6,7 +6,7 @@ use crate::{
     heap::{CellStatus, MemoryCell},
     instr::{InstrResult, Program},
     log::{Log, LogSource, LOG_CAPACITY},
-    simulator::Parameters,
+    simulator::{Parameters, Simulator},
     vm::VirtualMachine,
 };
 
@@ -23,6 +23,7 @@ pub struct Session {
 
     pub sim_params: Parameters,
     pub log_dest: LogDestination,
+    pub gc_ty: GCType,
 }
 
 pub enum LogDestination {
@@ -34,12 +35,12 @@ impl Session {
     pub fn new(
         heap_size: usize,
         alignment: usize,
-        gc_ty: &GCType,
+        gc_ty: GCType,
         program: Program,
         sim_params: Parameters,
         log_dest: LogDestination,
     ) -> Self {
-        let vm = VirtualMachine::new(alignment, heap_size, init_collector(gc_ty));
+        let vm = VirtualMachine::new(alignment, heap_size, init_collector(&gc_ty));
         Self {
             program,
             vm,
@@ -48,6 +49,7 @@ impl Session {
             instr_ptr: 0,
             sim_params,
             log_dest,
+            gc_ty,
         }
     }
 
@@ -56,6 +58,16 @@ impl Session {
             self.logs.pop_front();
         }
         self.logs.push_back(log);
+    }
+
+    pub fn gen_program(&mut self) -> Program {
+        let mut sim = Simulator::new(self.sim_params.clone(), &self.gc_ty);
+        sim.gen_program()
+        // Uncomment the following if you want to save the generated program to a file.
+        // match save_program_to_file(&program) {
+        //     Ok(filename) => println!("Program saved to {}", filename),
+        //     Err(e) => eprintln!("Failed to save program: {}", e),
+        // }
     }
 
     /// program interpretation step
