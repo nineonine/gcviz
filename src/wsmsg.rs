@@ -1,4 +1,4 @@
-use crate::{heap::MemoryCell, instr::InstrResult, log::Log};
+use crate::{heap::MemoryCell, log::Log, program::InstrResult};
 use serde::{
     ser::{SerializeStruct, Serializer},
     Deserialize, Serialize,

@@ -8,15 +8,15 @@ pub mod heap;
 pub mod mutator;
 
 /// Program representation.
-pub mod instr;
+pub mod program;
 
-/// Object type
+/// Object type.
 pub mod object;
 
 /// Allocator implementation.
 pub mod allocator;
 
-/// Errors
+/// Errors.
 pub mod error;
 
 /// Garbage collection implementations.
@@ -31,7 +31,11 @@ pub mod vm;
 /// Logging.
 pub mod log;
 
-/// WebSocket Messages
+/// WebSocket Messages.
 pub mod wsmsg;
 
+/// file system utilities.
 pub mod file_utils;
+
+/// Program runtime configuration.
+pub mod rts_cfg;

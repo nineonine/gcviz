@@ -4,45 +4,18 @@ use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom
 
 use crate::{
     error::VMError,
-    gc::{init_collector, GCType},
-    instr::{Instruction, Program},
+    gc::init_collector,
     object::{Field, ObjAddr, Object},
+    program::{Instruction, Program},
+    rts_cfg::ProgramRuntimeConfig,
     vm::VirtualMachine,
 };
 
-/// Program simulation parameters
-#[derive(Debug, Clone)]
-pub struct Parameters {
-    pub heap_size: usize,
-    pub alignment: usize,
-    pub num_frames: usize,
-    pub probs: FramePropabilities,
-}
-
-impl Default for Parameters {
-    fn default() -> Self {
-        Parameters {
-            heap_size: 1024,
-            alignment: 4,
-            num_frames: 100,
-            probs: FramePropabilities::default(),
-        }
-    }
-}
-
-impl Parameters {
-    pub fn new(heap_size: usize, alignment: usize, num_frames: usize) -> Self {
-        Parameters {
-            heap_size,
-            alignment,
-            num_frames,
-            probs: FramePropabilities::default(),
-        }
-    }
-}
+static NUM_INSTRS: usize = 100;
 
 #[derive(Debug, Clone)]
-pub struct FramePropabilities {
+pub struct ProgGenConfig {
+    pub num_instrs: usize,
     pub prob_alloc: f32,
     pub prob_read: f32,
     pub prob_write: f32,
@@ -51,9 +24,10 @@ pub struct FramePropabilities {
     pub prob_write_pointer: f32,
 }
 
-impl Default for FramePropabilities {
+impl Default for ProgGenConfig {
     fn default() -> Self {
-        FramePropabilities {
+        ProgGenConfig {
+            num_instrs: NUM_INSTRS,
             prob_alloc: 0.55,
             prob_read: 0.2,
             prob_write: 0.2,
@@ -66,14 +40,20 @@ impl Default for FramePropabilities {
 
 pub struct Simulator {
     vm: VirtualMachine,
-    pub params: Parameters,
+    pub rts_cfg: ProgramRuntimeConfig,
+    prog_gen_cfg: ProgGenConfig,
 }
 
 impl Simulator {
-    pub fn new(params: Parameters, gc_ty: &GCType) -> Simulator {
+    pub fn new(rts_cfg: ProgramRuntimeConfig) -> Simulator {
         Simulator {
-            vm: VirtualMachine::new(params.alignment, params.heap_size, init_collector(gc_ty)),
-            params,
+            vm: VirtualMachine::new(
+                rts_cfg.alignment,
+                rts_cfg.heap_size,
+                init_collector(&rts_cfg.gc_ty),
+            ),
+            rts_cfg,
+            prog_gen_cfg: ProgGenConfig::default(),
         }
     }
 
@@ -82,13 +62,13 @@ impl Simulator {
         let mut rng = rand::thread_rng();
 
         let weights = [
-            self.params.probs.prob_alloc,
-            self.params.probs.prob_read,
-            self.params.probs.prob_write,
-            self.params.probs.prob_gc,
+            self.prog_gen_cfg.prob_alloc,
+            self.prog_gen_cfg.prob_read,
+            self.prog_gen_cfg.prob_write,
+            self.prog_gen_cfg.prob_gc,
         ];
         let dist = WeightedIndex::new(weights).unwrap();
-        for _ in 0..self.params.num_frames {
+        for _ in 0..self.prog_gen_cfg.num_instrs {
             let frame = match dist.sample(&mut rng) {
                 0 => self.gen_allocate(),
                 1 => self.gen_read(),
@@ -159,8 +139,8 @@ impl Simulator {
             let field_offset = rng.gen_range(0..object.fields.len());
             let address = obj_addr + field_offset;
 
-            let p_scalar = self.params.probs.prob_write_scalar;
-            let p_pointer = self.params.probs.prob_write_pointer;
+            let p_scalar = self.prog_gen_cfg.prob_write_scalar;
+            let p_pointer = self.prog_gen_cfg.prob_write_pointer;
             let p_total = p_scalar + p_pointer;
 
             let value = if rng.gen_range(0.0..p_total) < p_scalar {

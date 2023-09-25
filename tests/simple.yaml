@@ -1,3 +1,9 @@
+rts_config:
+  heap_size: 4
+  alignment: 0
+  gc_ty: MarkSweep
+
+program:
 - _type: Allocate
   object:
     header: {}

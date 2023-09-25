@@ -1,7 +1,7 @@
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info};
+use std::env;
 use std::net::SocketAddr;
-use std::{collections::VecDeque, env};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::{
     accept_async,
@@ -9,18 +9,16 @@ use tokio_tungstenite::{
 };
 use tungstenite::Message;
 
-use gcviz::session::{LogDestination, Session, SessionResult};
-use gcviz::simulator::Parameters;
+use gcviz::file_utils::CustomError;
 use gcviz::{file_utils, wsmsg::WSMessageResponse};
-use gcviz::{file_utils::CustomError, gc::GCType};
 use gcviz::{
-    instr::Program,
+    program::Program,
     wsmsg::{WSMessageRequest, WSMessageRequestType},
 };
-
-static NUM_FRAMES: usize = 100;
-static ALIGNMENT: usize = 4;
-static HEAP_SIZE: usize = 1024;
+use gcviz::{
+    rts_cfg::ProgramRuntimeConfig,
+    session::{Session, SessionResult},
+};
 
 async fn accept_connection(peer: SocketAddr, stream: TcpStream) {
     if let Err(e) = handle_connection(peer, stream).await {
@@ -35,7 +33,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
     let mut ws_stream = accept_async(stream).await.expect("Failed to accept");
     info!("New WebSocket connection: {}", peer);
     let mut already_said_halt: bool = false;
-    let mut session: Session = init_session().unwrap();
+    let mut session: Session = Session::default();
 
     while let Some(msg) = ws_stream.next().await {
         let msg = msg?;
@@ -120,21 +118,6 @@ async fn main() -> SessionResult<()> {
     Ok(())
 }
 
-fn init_session() -> SessionResult<Session> {
-    let sim_params = Parameters::new(HEAP_SIZE, ALIGNMENT, NUM_FRAMES);
-    let gc_type = GCType::MarkSweep;
-    let session = Session::new(
-        HEAP_SIZE,
-        ALIGNMENT,
-        gc_type,
-        VecDeque::new(),
-        sim_params,
-        LogDestination::EventStream,
-    );
-
-    Ok(session)
-}
-
 ///
 /// 1. If `file_name` is provided, it loads the program from the specified file.
 /// 2. If `file_name` is not provided, it checks the environment variable `PROGRAM_FILE`
@@ -143,7 +126,7 @@ fn init_session() -> SessionResult<Session> {
 ///    the function generates a random program.
 ///
 fn load_program(session: &mut Session, file_name: Option<String>) -> Result<(), CustomError> {
-    let program: Program = if let Some(fname) = file_name {
+    let (program, rts_cfg): (Program, ProgramRuntimeConfig) = if let Some(fname) = file_name {
         // Load program using provided file name.
         info!("Loading program from provided file name: {}", fname);
         file_utils::load_program(&fname)
@@ -157,5 +140,6 @@ fn load_program(session: &mut Session, file_name: Option<String>) -> Result<(), 
         session.gen_program()
     };
     session.program = program;
+    session.rts_cfg = rts_cfg;
     Ok(())
 }

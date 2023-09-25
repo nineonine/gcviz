@@ -1,10 +1,12 @@
 pub mod mark_sweep;
 pub mod stats;
 
+use serde::{Deserialize, Serialize};
+
 use self::{mark_sweep::MarkSweep, stats::GCStats};
 use crate::error::VMError;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GCType {
     MarkSweep,
 }

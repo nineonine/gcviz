@@ -2,7 +2,7 @@ use crate::gc::GarbageCollector;
 use crate::{allocator::Allocator, heap::Heap, mutator::Mutator};
 use crate::{
     error::VMError,
-    instr::{
+    program::{
         InstrResult,
         Instruction::{self, Allocate, Read, Write, GC},
     },

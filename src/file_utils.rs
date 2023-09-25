@@ -10,7 +10,8 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use crate::{heap::Heap, instr::Program};
+use crate::rts_cfg::ProgramRuntimeConfig;
+use crate::{heap::Heap, program::Program};
 
 #[derive(Debug)]
 pub enum CustomError {
@@ -48,6 +49,7 @@ impl From<SerdeYamlError> for CustomError {
     }
 }
 
+// TODO: fix to also save RTS config
 pub fn save_program_to_file(program: &Program) -> Result<String, CustomError> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -72,12 +74,20 @@ pub fn save_heap_snapshot(heap: &Heap, test_path: &str) -> Result<String, Custom
     Ok(filename)
 }
 
-fn load_program_from_file(filename: &str) -> Result<Program, CustomError> {
+fn load_program_from_file(filename: &str) -> Result<(Program, ProgramRuntimeConfig), CustomError> {
     let mut file = File::open(filename).expect("Failed to open file");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Failed to read program from file");
-    serde_yaml::from_str(&contents).map_err(CustomError::from)
+
+    let value: serde_yaml::Value = serde_yaml::from_str(&contents).map_err(CustomError::from)?;
+
+    let config: ProgramRuntimeConfig =
+        serde_yaml::from_value(value["rts_config"].clone()).map_err(CustomError::from)?;
+    let program: Program =
+        serde_yaml::from_value(value["program"].clone()).map_err(CustomError::from)?;
+
+    Ok((program, config))
 }
 
 fn load_heap_from_file(filename: &str) -> Result<Heap, CustomError> {
@@ -92,7 +102,7 @@ lazy_static! {
     pub static ref CURRENT_DIR: PathBuf = env::current_dir().unwrap();
 }
 
-pub fn load_program(file_name: &str) -> Program {
+pub fn load_program(file_name: &str) -> (Program, ProgramRuntimeConfig) {
     let path = format!("{}/tests/{file_name}.yaml", CURRENT_DIR.display());
     load_program_from_file(path.as_str()).unwrap()
 }

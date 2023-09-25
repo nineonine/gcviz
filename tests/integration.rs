@@ -7,23 +7,14 @@ use serde_json::to_value;
 use gcviz::{
     error::VMError,
     file_utils::{load_heap_snapshot, load_program, save_heap_snapshot, CURRENT_DIR},
-    gc::GCType,
-    instr::Program,
-    session::{LogDestination, Session},
-    simulator::Parameters,
+    session::Session,
 };
 
-fn init_test(test_name: &str, heap_size: usize, alignment: usize, gc_type: GCType) -> Session {
-    let program: Program = load_program(test_name);
-    let sim_params: Parameters = Parameters::new(heap_size, alignment, program.len());
-    Session::new(
-        heap_size,
-        alignment,
-        gc_type,
-        program,
-        sim_params,
-        LogDestination::Stdout,
-    )
+fn init_test(test_name: &str) -> Session {
+    let (program, rts_cfg) = load_program(test_name);
+    let mut session = Session::new(rts_cfg);
+    session.program = program;
+    session
 }
 
 fn run_test(test: &mut Session) -> Result<(), VMError> {
@@ -45,15 +36,9 @@ fn check_against_snapshot(test_app: &Session, test_name: &str) {
     assert_eq!(snapshot_value, result_value);
 }
 
-fn __test(
-    test_name: &str,
-    heap_size: usize,
-    alignment: usize,
-    gc_type: GCType,
-) -> Result<(), VMError> {
+fn __test(test_name: &str) -> Result<(), VMError> {
     let update_snapshots = env::var("UPDATE_SNAPSHOTS").is_ok();
-
-    let mut test_app = init_test(test_name, heap_size, alignment, gc_type);
+    let mut test_app = init_test(test_name);
     run_test(&mut test_app)?;
     if update_snapshots {
         // save snapshot and don't compare
@@ -67,20 +52,20 @@ fn __test(
 
 #[test]
 fn test_simple() {
-    assert!(__test("simple", 4, 0, GCType::MarkSweep).is_ok());
+    assert!(__test("simple").is_ok());
 }
 
 #[test]
 fn test_could_not_allocate() {
-    assert!(__test("could_not_allocate", 1, 0, GCType::MarkSweep).is_err());
+    assert!(__test("could_not_allocate").is_err());
 }
 
 #[test]
 fn test_alignment_alloc_fail() {
-    assert!(__test("alignment_alloc_fail", 2, 2, GCType::MarkSweep).is_err());
+    assert!(__test("alignment_alloc_fail").is_err());
 }
 
 #[test]
 fn test_alloc_1() {
-    assert!(__test("alloc_1", 8, 4, GCType::MarkSweep).is_ok());
+    assert!(__test("alloc_1").is_ok());
 }

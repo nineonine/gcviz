@@ -2,11 +2,12 @@ use std::{collections::VecDeque, error};
 
 use crate::{
     error::VMError,
-    gc::{init_collector, GCType},
+    gc::init_collector,
     heap::{CellStatus, MemoryCell},
-    instr::{InstrResult, Program},
     log::{Log, LogSource, LOG_CAPACITY},
-    simulator::{Parameters, Simulator},
+    program::{InstrResult, Program},
+    rts_cfg::ProgramRuntimeConfig,
+    simulator::Simulator,
     vm::VirtualMachine,
 };
 
@@ -16,14 +17,12 @@ pub type SessionResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 /// Program execution session
 pub struct Session {
     pub program: Program,
+    pub rts_cfg: ProgramRuntimeConfig,
     pub instr_ptr: usize,
     pub logs: VecDeque<Log>,
     pub log_capacity: usize,
     pub vm: VirtualMachine,
-
-    pub sim_params: Parameters,
     pub log_dest: LogDestination,
-    pub gc_ty: GCType,
 }
 
 pub enum LogDestination {
@@ -31,25 +30,27 @@ pub enum LogDestination {
     Stdout,
 }
 
+impl Default for Session {
+    fn default() -> Self {
+        Session::new(ProgramRuntimeConfig::default())
+    }
+}
+
 impl Session {
-    pub fn new(
-        heap_size: usize,
-        alignment: usize,
-        gc_ty: GCType,
-        program: Program,
-        sim_params: Parameters,
-        log_dest: LogDestination,
-    ) -> Self {
-        let vm = VirtualMachine::new(alignment, heap_size, init_collector(&gc_ty));
+    pub fn new(rts_cfg: ProgramRuntimeConfig) -> Self {
+        let vm = VirtualMachine::new(
+            rts_cfg.alignment,
+            rts_cfg.heap_size,
+            init_collector(&rts_cfg.gc_ty),
+        );
         Self {
-            program,
-            vm,
+            program: VecDeque::new(),
             logs: VecDeque::with_capacity(LOG_CAPACITY),
+            log_dest: LogDestination::Stdout,
             log_capacity: LOG_CAPACITY,
             instr_ptr: 0,
-            sim_params,
-            log_dest,
-            gc_ty,
+            rts_cfg,
+            vm,
         }
     }
 
@@ -60,14 +61,9 @@ impl Session {
         self.logs.push_back(log);
     }
 
-    pub fn gen_program(&mut self) -> Program {
-        let mut sim = Simulator::new(self.sim_params.clone(), &self.gc_ty);
-        sim.gen_program()
-        // Uncomment the following if you want to save the generated program to a file.
-        // match save_program_to_file(&program) {
-        //     Ok(filename) => println!("Program saved to {}", filename),
-        //     Err(e) => eprintln!("Failed to save program: {}", e),
-        // }
+    pub fn gen_program(&mut self) -> (Program, ProgramRuntimeConfig) {
+        let mut sim = Simulator::new(self.rts_cfg.clone());
+        (sim.gen_program(), sim.rts_cfg)
     }
 
     /// program interpretation step
