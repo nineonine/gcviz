@@ -9,6 +9,8 @@
 .slider {
     flex-grow: 50;
     -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
     background: #e1e1e1;
     outline: none;
     transition: all 0.2s ease-in-out;

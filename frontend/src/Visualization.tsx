@@ -65,7 +65,6 @@ const Visualization: React.FC = () => {
         setWs(wsConnection);
 
         wsConnection.onopen = () => {
-            console.log("LOAD_PROGRAM", program_name)
             wsConnection.send(JSON.stringify({
                 type: 'LoadProgram',
                 program_name
@@ -108,7 +107,10 @@ const Visualization: React.FC = () => {
         };
 
         return () => {
-            wsConnection.close();
+            if (ws?.readyState === WebSocket.OPEN) {
+                console.log("cleanup: closing ws connection");
+                wsConnection.close();
+            }
         };
     }, [program_name]);
 
