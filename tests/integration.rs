@@ -69,3 +69,8 @@ fn test_alignment_alloc_fail() {
 fn test_alloc_1() {
     assert!(__test("alloc_1").is_ok());
 }
+
+#[test]
+fn test_alloc_2() {
+    assert!(__test("alloc_2").is_ok());
+}
