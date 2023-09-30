@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Heap {
-    pub roots: HashSet<ObjAddr>,
+    pub roots: BTreeSet<ObjAddr>,
     pub objects: BTreeMap<ObjAddr, Object>,
     pub free_list: Vec<(usize, usize)>,
     pub memory: Vec<MemoryCell>,
@@ -44,7 +44,7 @@ pub enum CellStatus {
 impl Heap {
     pub fn new(size: usize) -> Self {
         Heap {
-            roots: HashSet::new(),
+            roots: BTreeSet::new(),
             objects: BTreeMap::new(),
             memory: vec![MemoryCell::free(); size],
             free_list: vec![(0, size)],
