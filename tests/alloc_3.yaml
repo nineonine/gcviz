@@ -1,0 +1,34 @@
+rts_config:
+  alignment: 2
+  heap_size: 10
+  gc_ty: MarkSweep
+
+program:
+- _type: Allocate
+  object:
+    header: {}
+    fields:
+      - Scalar:
+          value: 1
+      - Scalar:
+          value: 2
+- _type: Allocate
+  object:
+    header: {}
+    fields:
+      - Scalar:
+          value: 3
+      - Scalar:
+          value: 4
+      - Scalar:
+          value: 5
+      - Scalar:
+          value: 6
+- _type: Allocate
+  object:
+    header: {}
+    fields:
+      - Scalar:
+          value: 7
+      - Scalar:
+          value: 8

@@ -103,6 +103,16 @@ mod tests {
     }
 
     #[test]
+    fn test_find_suitable_free_block_first_block() {
+        let mut heap = create_heap_with_free_list(vec![(2, 2), (8, 2)]);
+        let allocator = Allocator { alignment: 2 };
+
+        let result = allocator.find_suitable_free_block(&mut heap, 2);
+        assert_eq!(result, Some(2));
+        assert_eq!(heap.free_list, vec![(8, 2)]);
+    }
+
+    #[test]
     fn test_find_suitable_free_block_without_sufficient_space() {
         let mut heap = create_heap_with_free_list(vec![(0, 2)]);
         let allocator = Allocator { alignment: 2 };
