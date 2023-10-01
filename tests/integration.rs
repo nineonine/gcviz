@@ -74,3 +74,8 @@ fn test_alloc_1() {
 fn test_alloc_2() {
     assert!(__test("alloc_2").is_ok());
 }
+
+#[test]
+fn test_alloc_3() {
+    assert!(__test("alloc_3").is_ok());
+}
