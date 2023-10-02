@@ -40,6 +40,7 @@ const Visualization: React.FC = () => {
     const resetViz = () => {
         setIsRunning(false);
         setIsHalt(false);
+        setInfoBlock(resetInfoBlock(infoBlock, memory.length))
         setMemory(new Array(0).fill({ status: CellStatus.Free }));
         setEventLogs([[SUGGEST_INIT_LOG_ENTRY, undefined]]);
         clearHighlightedCells();
@@ -160,3 +161,13 @@ const Visualization: React.FC = () => {
 }
 
 export default Visualization;
+
+const resetInfoBlock = (infoBlock: InfoBlockData, heapSize: number): InfoBlockData => {
+    return {
+        gc_type: infoBlock.gc_type,
+        alignment: infoBlock.alignment,
+        heap_size: infoBlock.heap_size,
+        allocd_objects: 0,
+        free_memory: heapSize,
+    }
+}
