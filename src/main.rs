@@ -62,6 +62,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                                     last_log_entry,
                                     msg.pause_on_return,
                                     Some(instr_result),
+                                    session.make_info_block(),
                                 );
                                 let serialized_memory = serde_json::to_string(&msg_resp)
                                     .expect("Failed to serialize Tick message");

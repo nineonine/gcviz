@@ -1,14 +1,15 @@
 import React from 'react';
 import './InfoBlock.css';
+import { InfoBlockData } from './types';
 
-const InfoBlock: React.FC = () => {
+const InfoBlock: React.FC<InfoBlockData> = ({ gc_type, alignment, heap_size, allocd_objects, free_memory }) => {
     return (
         <div className='info-block'>
-            <InfoEntry label={'GC Type'} value={"MarkSweep"} />
-            <InfoEntry label={'Alignment'} value={"16"} />
-            <InfoEntry label={'Heap size'} value={"1024"} />
-            <InfoEntry label={'Allocated objects'} value={"10"} />
-            <InfoEntry label={'Free memory'} value={"1024"} />
+            <InfoEntry label={'GC Type'} value={gc_type} />
+            <InfoEntry label={'Alignment'} value={`${alignment}`} />
+            <InfoEntry label={'Heap size'} value={`${heap_size}`} />
+            <InfoEntry label={'Allocated objects'} value={`${allocd_objects}`} />
+            <InfoEntry label={'Free memory'} value={`${free_memory}`} />
         </div>
     );
 }

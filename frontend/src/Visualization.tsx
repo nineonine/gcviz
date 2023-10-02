@@ -6,7 +6,7 @@ import InfoBlock from './InfoBlock';
 import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
-import { CellStatus, MemoryCell, EventLogDetails, RESET_MSG, STEP_MSG, TICK_MSG } from './types';
+import { CellStatus, MemoryCell, EventLogDetails, RESET_MSG, STEP_MSG, TICK_MSG, InfoBlockData, INFOBLOCK_DEFAULT } from './types';
 import Slider from './Slider';
 import Toast from './Toast';
 
@@ -14,6 +14,7 @@ import { SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logUtils';
 import useHighlightState from './useHightlightState';
 
 const INTERVAL_RATE = 100; // 0.1 seconds
+const BACKEND = 'ws://127.0.0.1:9002';
 
 const Visualization: React.FC = () => {
     const [intervalRate, setIntervalRate] = React.useState<number>(INTERVAL_RATE);
@@ -29,6 +30,7 @@ const Visualization: React.FC = () => {
     } = useHighlightState();
     const { program_name } = useParams<{ program_name?: string }>();
     const [toastMessage, setToastMessage] = useState<string>('');
+    const [infoBlock, setInfoBlock] = useState<InfoBlockData>(INFOBLOCK_DEFAULT);
 
     const toggleExecution = () => {
         if (isHalt) return;
@@ -43,14 +45,14 @@ const Visualization: React.FC = () => {
     }
 
     const handleRestart = () => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
+        if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(RESET_MSG));
         }
         resetViz();
     };
 
     const stepTick = () => {
-        if (!isRunning && ws && ws.readyState === WebSocket.OPEN) {
+        if (!isRunning && ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(STEP_MSG));
         }
     }
@@ -61,7 +63,7 @@ const Visualization: React.FC = () => {
 
     useEffect(() => {
         // Initialize WebSocket connection only once when component mounts
-        const wsConnection = new WebSocket("ws://127.0.0.1:9002");
+        const wsConnection = new WebSocket(BACKEND);
         setWs(wsConnection);
 
         wsConnection.onopen = () => {
@@ -95,6 +97,10 @@ const Visualization: React.FC = () => {
                         setIsRunning(false);
                     }
 
+                    if (data.info_block) {
+                        setInfoBlock(data.info_block)
+                    }
+
                     break;
                 }
                 case 'HALT': {
@@ -107,7 +113,7 @@ const Visualization: React.FC = () => {
         };
 
         return () => {
-            if (ws?.readyState === WebSocket.OPEN) {
+            if (wsConnection.readyState === WebSocket.OPEN) {
                 console.log("cleanup: closing ws connection");
                 wsConnection.close();
             }
@@ -133,7 +139,12 @@ const Visualization: React.FC = () => {
             <Toast show={toastMessage !== ''} message={toastMessage} onClose={closeToast} />
             <div className="top-section">
                 <div className="left-panel">
-                    <InfoBlock />
+                    <InfoBlock gc_type={infoBlock.gc_type}
+                        alignment={infoBlock.alignment}
+                        heap_size={infoBlock.heap_size}
+                        allocd_objects={infoBlock.allocd_objects}
+                        free_memory={infoBlock.free_memory}
+                    />
                     <Slider minValue={100} maxValue={2000} intervalRate={intervalRate} updateIntervalRate={setIntervalRate} />
                     <EventStream logs={eventLogs} highlightCells={highlightCells} clearHighlightedCells={clearHighlightedCells} />
                 </div>

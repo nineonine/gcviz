@@ -53,3 +53,19 @@ export enum LogSource {
 }
 
 export type EventLogDetails = [LogEntry, InstrResult | undefined];
+
+export interface InfoBlockData {
+    gc_type: string;
+    alignment: number;
+    heap_size: number;
+    allocd_objects: number;
+    free_memory: number;
+}
+
+export const INFOBLOCK_DEFAULT: InfoBlockData = {
+    gc_type: '',
+    alignment: -1,
+    heap_size: -1,
+    allocd_objects: -1,
+    free_memory: -1,
+}

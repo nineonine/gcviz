@@ -9,6 +9,7 @@ use crate::{
     rts_cfg::ProgramRuntimeConfig,
     simulator::Simulator,
     vm::VirtualMachine,
+    wsmsg::InfoBlockData,
 };
 
 /// Application result type.
@@ -152,6 +153,16 @@ impl Session {
     fn visualize_allocation(memory: &mut [MemoryCell], addr: usize, size: usize) {
         for c in memory.iter_mut().skip(addr).take(size) {
             *c = MemoryCell::new(CellStatus::Allocated);
+        }
+    }
+
+    pub fn make_info_block(&self) -> InfoBlockData {
+        InfoBlockData {
+            gc_type: self.rts_cfg.gc_ty.clone(),
+            alignment: self.rts_cfg.alignment,
+            heap_size: self.rts_cfg.heap_size,
+            allocd_objects: self.vm.heap.objects.len(),
+            free_memory: self.vm.heap.free_memory(),
         }
     }
 }
