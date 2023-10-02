@@ -42,6 +42,7 @@ const Visualization: React.FC = () => {
         setIsHalt(false);
         setMemory(new Array(0).fill({ status: CellStatus.Free }));
         setEventLogs([[SUGGEST_INIT_LOG_ENTRY, undefined]]);
+        clearHighlightedCells();
     }
 
     const handleRestart = () => {
