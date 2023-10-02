@@ -141,6 +141,7 @@ fn load_program(session: &mut Session, file_name: Option<String>) -> Result<(), 
         session.gen_program()
     };
     session.program = program;
+    session.vm.reset_heap(rts_cfg.heap_size);
     session.rts_cfg = rts_cfg;
     Ok(())
 }

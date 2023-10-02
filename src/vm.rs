@@ -53,4 +53,8 @@ impl VirtualMachine {
                 .map(|stats| InstrResult::GC { stats }),
         }
     }
+
+    pub fn reset_heap(&mut self, size: usize) {
+        self.heap = Heap::new(size);
+    }
 }
