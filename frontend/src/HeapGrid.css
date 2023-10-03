@@ -2,13 +2,13 @@
     display: grid;
     gap: 2px;
     /* Spacing between cells */
-    flex: 4;
+    flex: 4 1;
+    overflow-y: auto;
     margin: 10px 10px;
     padding: 10px;
     border: 1px solid #e0e0e0;
     background-color: #f5f5f5;
-    overflow-y: auto;
-    /* allows vertical scrolling */
+    max-height: 85vh;
 }
 
 .cell {

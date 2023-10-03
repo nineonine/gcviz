@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::gc::GCType;
 
 static ALIGNMENT: usize = 4;
-static HEAP_SIZE: usize = 1024;
+static HEAP_SIZE: usize = 512;
 
 /// Program simulation parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]

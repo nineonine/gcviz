@@ -67,6 +67,7 @@ const Visualization: React.FC = () => {
         // Initialize WebSocket connection only once when component mounts
         const wsConnection = new WebSocket(BACKEND);
         setWs(wsConnection);
+        console.log('Established ws conn');
 
         wsConnection.onopen = () => {
             wsConnection.send(JSON.stringify({
@@ -149,6 +150,7 @@ const Visualization: React.FC = () => {
                     />
                     <Slider minValue={100} maxValue={2000} intervalRate={intervalRate} updateIntervalRate={setIntervalRate} />
                     <EventStream logs={eventLogs} highlightCells={highlightCells} clearHighlightedCells={clearHighlightedCells} />
+                    <div className='extra-details'></div>
                 </div>
                 <HeapGrid memory={memory} highlightedCells={highlightedCells} />
             </div>

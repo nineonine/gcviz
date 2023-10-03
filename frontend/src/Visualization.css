@@ -1,16 +1,26 @@
 .visualization {
     display: flex;
     flex-direction: column;
-    height: 97vh;
+    flex: 1;
 }
 
 .top-section {
     display: flex;
     flex-direction: row;
+    flex: 1;
+    position: sticky;
+    bottom: 0;
+    margin-bottom: 5px;
 }
 
 .left-panel {
     display: flex;
     flex-direction: column;
     flex: 3;
+}
+
+.extra-details {
+    flex: 1 1 33%; /* grow, shrink, base size */
+    margin-top: auto;
+    padding: 10px;
 }
