@@ -9,6 +9,7 @@
     padding: 0;
     margin: 0;
     display: flex;  /* Use Flexbox for horizontal alignment */
+    gap: 2vw;
 }
 
 .nav-item {
