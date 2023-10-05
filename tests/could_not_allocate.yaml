@@ -8,7 +8,5 @@ program:
   object:
     header: {}
     fields:
-      - Scalar:
-          value: 1
-      - Scalar:
-          value: 2
+      - value: 1
+      - value: 2

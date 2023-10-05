@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::VMError,
+    free_list::{merge_free_list, FreeList},
     object::{ObjAddr, Object},
 };
 
@@ -11,7 +12,7 @@ use crate::{
 pub struct Heap {
     pub roots: BTreeSet<ObjAddr>,
     pub objects: BTreeMap<ObjAddr, Object>,
-    pub free_list: Vec<(usize, usize)>,
+    pub free_list: FreeList,
     pub memory: Vec<MemoryCell>,
 }
 
@@ -62,7 +63,18 @@ impl Heap {
         Err(VMError::SegmentationFault)
     }
 
-    pub fn free_memory(&self) -> usize {
+    pub fn calc_free_memory(&self) -> usize {
         self.free_list.iter().map(|(_, size)| size).sum()
+    }
+
+    pub fn free_object(&mut self, addr: ObjAddr) {
+        if let Some(obj) = self.objects.remove(&addr) {
+            let size = obj.size();
+            // Update the free_list to include the memory location previously occupied by the object
+            self.free_list.push((addr, addr + size - 1));
+        }
+    }
+    pub fn merge_free_ranges(&mut self) {
+        self.free_list = merge_free_list(self.free_list.to_vec());
     }
 }

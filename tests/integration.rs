@@ -79,3 +79,8 @@ fn test_alloc_2() {
 fn test_alloc_3() {
     assert!(__test("alloc_3").is_ok());
 }
+
+#[test]
+fn test_mark_sweep_1() {
+    assert!(__test("mark_sweep_1").is_ok());
+}

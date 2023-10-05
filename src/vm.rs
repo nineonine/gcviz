@@ -49,7 +49,7 @@ impl VirtualMachine {
             }
             GC => self
                 .collector
-                .collect()
+                .collect(&mut self.heap)
                 .map(|stats| InstrResult::GC { stats }),
         }
     }

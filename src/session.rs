@@ -162,7 +162,7 @@ impl Session {
             alignment: self.rts_cfg.alignment,
             heap_size: self.rts_cfg.heap_size,
             allocd_objects: self.vm.heap.objects.len(),
-            free_memory: self.vm.heap.free_memory(),
+            free_memory: self.vm.heap.calc_free_memory(),
         }
     }
 }

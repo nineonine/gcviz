@@ -1,6 +1,6 @@
 use rand::Rng;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
+use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
+use std::{collections::HashMap, fmt};
 
 pub type ObjAddr = usize;
 pub type Value = usize;
@@ -9,7 +9,7 @@ pub type Value = usize;
 pub struct Object {
     #[allow(dead_code)]
     #[serde(rename = "header")]
-    header: ObjHeader,
+    pub header: ObjHeader,
     pub fields: Vec<Field>,
 }
 
@@ -41,7 +41,7 @@ impl Object {
 
         // Create an object with generated fields
         Object {
-            header: ObjHeader {},
+            header: ObjHeader { marked: false },
             fields,
         }
     }
@@ -62,13 +62,82 @@ impl fmt::Display for Object {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-struct ObjHeader {}
+#[derive(Clone, Debug)]
+pub struct ObjHeader {
+    pub marked: bool,
+}
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+impl Serialize for ObjHeader {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_map(None)?.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for ObjHeader {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let mut marked = false;
+
+        let v: Option<HashMap<String, bool>> = Option::deserialize(deserializer)?;
+
+        if let Some(map) = v {
+            if let Some(m) = map.get("marked") {
+                marked = *m;
+            }
+        }
+
+        Ok(ObjHeader { marked })
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum Field {
     Ref { addr: Address },
     Scalar { value: Value },
+}
+
+impl Serialize for Field {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Field::Scalar { value } => {
+                let mut map = serde::ser::Serializer::serialize_map(serializer, Some(1))?;
+                map.serialize_entry("value", value)?;
+                map.end()
+            }
+            Field::Ref { addr } => {
+                let mut map = serde::ser::Serializer::serialize_map(serializer, Some(1))?;
+                map.serialize_entry("addr", addr)?;
+                map.end()
+            }
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Field {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum FieldHelper {
+            Ref { addr: Address },
+            Scalar { value: Value },
+        }
+
+        match FieldHelper::deserialize(deserializer)? {
+            FieldHelper::Scalar { value } => Ok(Field::Scalar { value }),
+            FieldHelper::Ref { addr } => Ok(Field::Ref { addr }),
+        }
+    }
 }
 
 impl fmt::Display for Field {
@@ -92,10 +161,7 @@ impl Serialize for Address {
         S: Serializer,
     {
         match self {
-            Address::Ptr(addr) => {
-                let value = serde_json::json!({ "ptr": *addr });
-                value.serialize(serializer)
-            }
+            Address::Ptr(addr) => serializer.serialize_u64(*addr as u64),
             Address::Null => serializer.serialize_none(),
         }
     }
@@ -109,13 +175,15 @@ impl<'de> Deserialize<'de> for Address {
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum AddressHelper {
-            Ptr { ptr: ObjAddr },
-            Null(String),
+            Ptr(ObjAddr),
+            NamedPtr { ptr: ObjAddr },
+            Null,
         }
 
         match AddressHelper::deserialize(deserializer)? {
-            AddressHelper::Ptr { ptr } => Ok(Address::Ptr(ptr)),
-            AddressHelper::Null(_) => Ok(Address::Null),
+            AddressHelper::Ptr(ptr) => Ok(Address::Ptr(ptr)),
+            AddressHelper::NamedPtr { ptr } => Ok(Address::Ptr(ptr)),
+            AddressHelper::Null => Ok(Address::Null),
         }
     }
 }

@@ -4,7 +4,7 @@ pub mod stats;
 use serde::{Deserialize, Serialize};
 
 use self::{mark_sweep::MarkSweep, stats::GCStats};
-use crate::error::VMError;
+use crate::{error::VMError, heap::Heap};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GCType {
@@ -18,7 +18,7 @@ pub fn init_collector(gc_ty: &GCType) -> Box<dyn GarbageCollector> {
 }
 
 pub trait GarbageCollector: Send {
-    fn collect(&self) -> Result<GCStats, VMError>;
+    fn collect(&self, heap: &mut Heap) -> Result<GCStats, VMError>;
     fn ty(&self) -> GCType;
     fn new_instance(&self) -> Box<dyn GarbageCollector>;
 }

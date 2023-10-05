@@ -8,16 +8,12 @@ program:
   object:
     header: {}
     fields:
-      - Scalar:
-          value: 1
-      - Scalar:
-          value: 2
+      - value: 1
+      - value: 2
 
 - _type: Allocate
   object:
     header: {}
     fields:
-      - Scalar:
-          value: 3
-      - Scalar:
-          value: 4
+      - value: 3
+      - value: 4

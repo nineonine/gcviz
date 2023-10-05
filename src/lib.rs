@@ -4,6 +4,9 @@ pub mod session;
 /// UI memory representation.
 pub mod heap;
 
+///
+pub mod free_list;
+
 /// Mutator implementation.
 pub mod mutator;
 

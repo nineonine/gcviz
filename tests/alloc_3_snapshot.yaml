@@ -1,44 +1,36 @@
-  roots:
-  - 0
+roots:
+- 0
+- 2
+- 6
+objects:
+  0:
+    header: {}
+    fields:
+    - value: 1
+    - value: 2
+  2:
+    header: {}
+    fields:
+    - value: 3
+    - value: 4
+    - value: 5
+    - value: 6
+  6:
+    header: {}
+    fields:
+    - value: 7
+    - value: 8
+free_list:
+- - 8
   - 2
-  - 6
-  objects:
-    0:
-      header: {}
-      fields:
-      - !Scalar
-        value: 1
-      - !Scalar
-        value: 2
-    2:
-      header: {}
-      fields:
-      - !Scalar
-        value: 3
-      - !Scalar
-        value: 4
-      - !Scalar
-        value: 5
-      - !Scalar
-        value: 6
-    6:
-      header: {}
-      fields:
-      - !Scalar
-        value: 7
-      - !Scalar
-        value: 8
-  free_list:
-  - - 8
-    - 2
-  memory:
-  - status: Allocated
-  - status: Allocated
-  - status: Allocated
-  - status: Allocated
-  - status: Allocated
-  - status: Allocated
-  - status: Allocated
-  - status: Allocated
-  - status: Free
-  - status: Free
+memory:
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Free
+- status: Free
