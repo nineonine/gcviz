@@ -1,16 +1,18 @@
 rts_config:
-  heap_size: 16
-  alignment: 0
+  heap_size: 8
+  alignment: 2
   gc_ty: MarkSweep
 
 program:
 - _type: Allocate
+  is_root: false
   object:
     header: {}
     fields:
       - addr: null
 
 - _type: Allocate
+  is_root: true
   object:
     header: {}
     fields:
@@ -18,3 +20,16 @@ program:
       - value: 2
       - addr: 0
       - addr: null
+
+- _type: Allocate
+  is_root: true
+  object:
+    header: {}
+    fields:
+      - value: 909
+
+- _type: Write
+  addr: 4
+  value: 6
+
+- _type: GC

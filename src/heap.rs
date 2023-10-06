@@ -77,4 +77,49 @@ impl Heap {
     pub fn merge_free_ranges(&mut self) {
         self.free_list = merge_free_list(self.free_list.to_vec());
     }
+
+    pub fn deallocate(&mut self, addr: ObjAddr) -> Result<(), VMError> {
+        if let Some(object) = self.objects.remove(&addr) {
+            let size = object.size();
+
+            // Add the deallocated space back to free_list and sort it by address
+            self.free_list.push((addr, size));
+            self.free_list.sort_by(|a, b| a.0.cmp(&b.0));
+
+            // Merge adjacent free blocks
+            let mut i = 0;
+            while i < self.free_list.len() - 1 {
+                if self.free_list[i].0 + self.free_list[i].1 == self.free_list[i + 1].0 {
+                    let new_size = self.free_list[i].1 + self.free_list[i + 1].1;
+                    self.free_list[i].1 = new_size;
+                    self.free_list.remove(i + 1);
+                } else {
+                    i += 1;
+                }
+            }
+
+            // Remove the deallocated object address from the roots set, if present
+            self.roots.remove(&addr);
+            Ok(())
+        } else {
+            Err(VMError::DeallocationError) // Error type for failed deallocation
+        }
+    }
+
+    pub fn redraw_memory(&mut self) {
+        // Reset all memory cells to Free
+        for cell in &mut self.memory {
+            cell.status = CellStatus::Free;
+        }
+
+        // Set the memory cells occupied by objects to Allocated
+        for (addr, object) in &self.objects {
+            let size = object.size();
+            for offset in 0..size {
+                if let Some(cell) = self.memory.get_mut(*addr + offset) {
+                    cell.status = CellStatus::Allocated;
+                }
+            }
+        }
+    }
 }

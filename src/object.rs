@@ -18,6 +18,13 @@ impl Object {
         self.fields.len()
     }
 
+    pub fn new(fields: Vec<Field>) -> Self {
+        Self {
+            header: ObjHeader { marked: false },
+            fields,
+        }
+    }
+
     pub fn random() -> Object {
         let mut rng = rand::thread_rng();
 
@@ -99,6 +106,12 @@ impl<'de> Deserialize<'de> for ObjHeader {
 pub enum Field {
     Ref { addr: Address },
     Scalar { value: Value },
+}
+
+impl Field {
+    pub fn new_scalar(value: usize) -> Self {
+        Field::Scalar { value }
+    }
 }
 
 impl Serialize for Field {

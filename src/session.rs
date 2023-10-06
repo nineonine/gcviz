@@ -68,12 +68,13 @@ impl Session {
     }
 
     /// program interpretation step
+    /// this builds event log entry and updates the visual aspect of heap
     pub fn tick(&mut self) -> Result<InstrResult, VMError> {
         if let Some(instruction) = self.program.get(self.instr_ptr) {
             match self.vm.tick(instruction) {
                 Ok(instr_result) => {
                     match &instr_result {
-                        InstrResult::Allocate { object, addr } => {
+                        InstrResult::Allocate { object, addr, .. } => {
                             self.enqueue_log(Log::new(
                                 format!("{object} at 0x{addr:X}"),
                                 LogSource::ALLOC,
@@ -107,6 +108,7 @@ impl Session {
                                 LogSource::GC,
                                 Some(self.instr_ptr),
                             ));
+                            self.vm.heap.redraw_memory();
                         }
                     }
                     self.instr_ptr += 1;

@@ -13,12 +13,19 @@ impl Allocator {
         Allocator { alignment }
     }
 
-    pub fn allocate(&self, heap: &mut Heap, object: Object) -> Result<ObjAddr, VMError> {
+    pub fn allocate(
+        &self,
+        heap: &mut Heap,
+        object: Object,
+        is_root: bool,
+    ) -> Result<ObjAddr, VMError> {
         let size = object.size();
 
         if let Some(aligned_start) = self.find_suitable_free_block(heap, size) {
             heap.objects.insert(aligned_start, object);
-            heap.roots.insert(aligned_start);
+            if is_root {
+                heap.roots.insert(aligned_start);
+            }
             Ok(aligned_start)
         } else {
             Err(VMError::AllocationError)
@@ -79,7 +86,7 @@ impl Allocator {
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
-    use crate::heap::MemoryCell;
+    use crate::{heap::MemoryCell, object::Field};
 
     use super::*;
 
@@ -213,5 +220,78 @@ mod tests {
         for i in 0..10 {
             assert_eq!(allocator.aligned_position(i), i);
         }
+    }
+
+    #[test]
+    fn test_allocate_with_sufficient_space() {
+        let mut heap = create_heap_with_free_list(vec![(0, 4)]);
+        let allocator = Allocator { alignment: 2 };
+        let object = Object::new(vec![
+            Field::new_scalar(1),
+            Field::new_scalar(2),
+            Field::new_scalar(3),
+        ]);
+
+        let result = allocator.allocate(&mut heap, object, true);
+        assert!(result.is_ok());
+        assert_eq!(heap.objects.len(), 1); // The object should be added to `heap.objects`.
+        assert_eq!(heap.roots.len(), 1); // Since it's marked as root, it should be added to `heap.roots`.
+        assert_eq!(heap.free_list, vec![(3, 1)]); // 1 remaining cell after allocation.
+    }
+
+    #[test]
+    fn test_allocate_without_sufficient_space() {
+        let mut heap = create_heap_with_free_list(vec![(0, 2)]);
+        let allocator = Allocator { alignment: 2 };
+        let object = Object::new(vec![
+            Field::new_scalar(1),
+            Field::new_scalar(2),
+            Field::new_scalar(3),
+        ]);
+
+        let result = allocator.allocate(&mut heap, object, true);
+        assert!(result.is_err()); // Allocation should fail.
+        assert_eq!(heap.objects.len(), 0); // No object should be added.
+        assert_eq!(heap.free_list, vec![(0, 2)]); // Free list should remain unchanged.
+    }
+
+    #[test]
+    fn test_allocate_multiple_objects() {
+        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
+        let allocator = Allocator { alignment: 2 };
+
+        let object1 = Object::new(vec![Field::new_scalar(1), Field::new_scalar(2)]);
+        let object2 = Object::new(vec![
+            Field::new_scalar(3),
+            Field::new_scalar(4),
+            Field::new_scalar(5),
+        ]);
+        let object3 = Object::new(vec![Field::new_scalar(6), Field::new_scalar(7)]);
+
+        allocator.allocate(&mut heap, object1, true).unwrap();
+        allocator.allocate(&mut heap, object2, true).unwrap();
+        allocator.allocate(&mut heap, object3, false).unwrap();
+
+        assert_eq!(heap.objects.len(), 3); // Three objects should be added.
+        assert_eq!(heap.roots.len(), 2); // Only two objects were marked as roots.
+                                         // Free list should have remaining spaces depending on the sizes and alignment of the objects.
+    }
+
+    #[test]
+    fn test_allocate_after_deallocate() {
+        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
+        let allocator = Allocator { alignment: 2 };
+
+        let object1 = Object::new(vec![Field::new_scalar(1), Field::new_scalar(2)]);
+        let addr1 = allocator.allocate(&mut heap, object1, true).unwrap();
+
+        heap.deallocate(addr1).unwrap();
+
+        let object2 = Object::new(vec![Field::new_scalar(3), Field::new_scalar(4)]);
+        let addr2 = allocator.allocate(&mut heap, object2, false).unwrap();
+
+        assert_eq!(addr1, addr2); // Should allocate in the same spot as the deallocated object.
+        assert_eq!(heap.objects.len(), 1);
+        assert_eq!(heap.roots.len(), 0);
     }
 }

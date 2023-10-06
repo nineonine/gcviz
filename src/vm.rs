@@ -27,14 +27,13 @@ impl VirtualMachine {
 
     pub fn tick(&mut self, instr: &Instruction) -> Result<InstrResult, VMError> {
         match instr {
-            Allocate { object } => {
-                self.allocator
-                    .allocate(&mut self.heap, object.clone())
-                    .map(|addr| InstrResult::Allocate {
-                        object: object.clone(),
-                        addr,
-                    })
-            }
+            Allocate { object, is_root } => self
+                .allocator
+                .allocate(&mut self.heap, object.clone(), *is_root)
+                .map(|addr| InstrResult::Allocate {
+                    object: object.clone(),
+                    addr,
+                }),
             Read { addr } => self
                 .mutator
                 .read(&self.heap, *addr)

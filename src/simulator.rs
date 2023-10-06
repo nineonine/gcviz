@@ -84,12 +84,17 @@ impl Simulator {
     fn gen_allocate(&mut self) -> Instruction {
         // Generate a random Object
         let object = Object::random();
+        // TODO: hook up is_root generation
+        let is_root = true;
         match self
             .vm
             .allocator
-            .allocate(&mut self.vm.heap, object.clone())
+            .allocate(&mut self.vm.heap, object.clone(), is_root)
         {
-            Ok(_) => Instruction::Allocate { object },
+            Ok(_) => Instruction::Allocate {
+                object,
+                is_root: true,
+            },
             Err(_) => panic!("gen_allocate"),
         }
     }
