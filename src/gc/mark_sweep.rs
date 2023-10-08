@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::{
     error::VMError,
     heap::Heap,
@@ -69,10 +71,15 @@ impl MarkSweep {
         }
 
         for addr in addresses_to_remove {
-            heap.free_object(addr);
+            match heap.free_object(addr) {
+                Ok(_) => {}
+                Err(_e) => panic!("sweep:free_object at {addr:}"),
+            }
         }
 
         heap.merge_free_ranges();
+        debug!("____GC objects AFTER {:?}", heap.objects);
+        debug!("____ GC free ranges AFTER {:?}", heap.free_list);
     }
 }
 

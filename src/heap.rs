@@ -67,36 +67,19 @@ impl Heap {
         self.free_list.iter().map(|(_, size)| size).sum()
     }
 
-    pub fn free_object(&mut self, addr: ObjAddr) {
-        if let Some(obj) = self.objects.remove(&addr) {
-            let size = obj.size();
-            // Update the free_list to include the memory location previously occupied by the object
-            self.free_list.push((addr, addr + size - 1));
-        }
-    }
     pub fn merge_free_ranges(&mut self) {
         self.free_list = merge_free_list(self.free_list.to_vec());
     }
 
-    pub fn deallocate(&mut self, addr: ObjAddr) -> Result<(), VMError> {
+    pub fn free_object(&mut self, addr: ObjAddr) -> Result<(), VMError> {
         if let Some(object) = self.objects.remove(&addr) {
             let size = object.size();
 
-            // Add the deallocated space back to free_list and sort it by address
+            // Add the deallocated space back to free_list
             self.free_list.push((addr, size));
-            self.free_list.sort_by(|a, b| a.0.cmp(&b.0));
 
-            // Merge adjacent free blocks
-            let mut i = 0;
-            while i < self.free_list.len() - 1 {
-                if self.free_list[i].0 + self.free_list[i].1 == self.free_list[i + 1].0 {
-                    let new_size = self.free_list[i].1 + self.free_list[i + 1].1;
-                    self.free_list[i].1 = new_size;
-                    self.free_list.remove(i + 1);
-                } else {
-                    i += 1;
-                }
-            }
+            // Use unified merge function
+            self.free_list = merge_free_list(self.free_list.to_vec());
 
             // Remove the deallocated object address from the roots set, if present
             self.roots.remove(&addr);

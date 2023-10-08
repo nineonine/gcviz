@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::{
     error::VMError,
     heap::Heap,
@@ -20,12 +22,15 @@ impl Allocator {
         is_root: bool,
     ) -> Result<ObjAddr, VMError> {
         let size = object.size();
+        debug!("____ ALLOC free ranges BEFORE {:?}", heap.free_list);
 
         if let Some(aligned_start) = self.find_suitable_free_block(heap, size) {
             heap.objects.insert(aligned_start, object);
             if is_root {
                 heap.roots.insert(aligned_start);
             }
+            debug!("____ ALLOC objects AFTER {:?}", heap.objects);
+            debug!("____ ALLOC free ranges AFTER {:?}", heap.free_list);
             Ok(aligned_start)
         } else {
             Err(VMError::AllocationError)
@@ -285,7 +290,7 @@ mod tests {
         let object1 = Object::new(vec![Field::new_scalar(1), Field::new_scalar(2)]);
         let addr1 = allocator.allocate(&mut heap, object1, true).unwrap();
 
-        heap.deallocate(addr1).unwrap();
+        heap.free_object(addr1).unwrap();
 
         let object2 = Object::new(vec![Field::new_scalar(3), Field::new_scalar(4)]);
         let addr2 = allocator.allocate(&mut heap, object2, false).unwrap();

@@ -46,10 +46,11 @@ impl VirtualMachine {
                         value: *value,
                     })
             }
-            GC => self
-                .collector
-                .collect(&mut self.heap)
-                .map(|stats| InstrResult::GC { stats }),
+            GC => {
+                let result = self.collector.collect(&mut self.heap);
+                self.heap.merge_free_ranges();
+                result.map(|stats| InstrResult::GC { stats })
+            }
         }
     }
 
