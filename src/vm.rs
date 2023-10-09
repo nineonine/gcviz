@@ -49,7 +49,7 @@ impl VirtualMachine {
             GC => {
                 let result = self.collector.collect(&mut self.heap);
                 self.heap.merge_free_ranges();
-                result.map(|stats| InstrResult::GC { stats })
+                result.map(|(stats, gc_eventlog)| InstrResult::GC { stats, gc_eventlog })
             }
         }
     }

@@ -6,7 +6,7 @@ use serde::{
 };
 
 use crate::{
-    gc::stats::GCStats,
+    gc::{stats::GCStats, GCEvent},
     object::{Object, Value},
 };
 
@@ -82,8 +82,20 @@ impl<'de> Deserialize<'de> for Instruction {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "_type")]
 pub enum InstrResult {
-    Allocate { addr: usize, object: Object },
-    Read { addr: usize, value: Value },
-    Write { addr: usize, value: Value },
-    GC { stats: GCStats },
+    Allocate {
+        addr: usize,
+        object: Object,
+    },
+    Read {
+        addr: usize,
+        value: Value,
+    },
+    Write {
+        addr: usize,
+        value: Value,
+    },
+    GC {
+        stats: GCStats,
+        gc_eventlog: Vec<GCEvent>,
+    },
 }

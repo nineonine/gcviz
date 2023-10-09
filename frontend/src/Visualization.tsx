@@ -6,12 +6,17 @@ import InfoBlock from './InfoBlock';
 import EventStream from './EventStream';
 import HeapGrid from './HeapGrid';
 import ControlPanel from './ControlPanel';
-import { CellStatus, MemoryCell, EventLogDetails, RESET_MSG, STEP_MSG, TICK_MSG, InfoBlockData, INFOBLOCK_DEFAULT } from './types';
+import { CellStatus, MemoryCell, RESET_MSG, STEP_MSG, TICK_MSG, InfoBlockData, INFOBLOCK_DEFAULT, GCEvent, LogEntry } from './types';
 import Slider from './Slider';
 import Toast from './Toast';
 
 import { SUGGEST_INIT_LOG_ENTRY, mkLogEntry } from './logUtils';
 import useHighlightState from './useHightlightState';
+import { EventOps, gcEventOps, logEntryOps } from './eventlog';
+
+function isLogEntry(event: LogEntry | GCEvent): event is LogEntry {
+    return (event as LogEntry).source !== undefined;
+}
 
 const INTERVAL_RATE = 100; // 0.1 seconds
 const BACKEND = 'ws://127.0.0.1:9002';
@@ -21,7 +26,9 @@ const Visualization: React.FC = () => {
     const [ws, setWs] = useState<WebSocket | null>(null);
     const [memory, setMemory] = useState<Array<MemoryCell>>(new Array(0).fill({ status: CellStatus.Free }));
     const [isRunning, setIsRunning] = useState(false);
-    const [eventLogs, setEventLogs] = useState<EventLogDetails[]>([[SUGGEST_INIT_LOG_ENTRY, undefined]]);
+    const [eventLogs, setEventLogs] = useState<LogEntry[]>([SUGGEST_INIT_LOG_ENTRY]);
+    const [gcEventLogs, setGCEventLogs] = useState<GCEvent[]>([]);
+    const [pendingGCEvents, setPendingGCEvents] = useState<GCEvent[]>([]);
     const [isHalt, setIsHalt] = useState<boolean>(false);
     const {
         highlightedCells,
@@ -42,7 +49,8 @@ const Visualization: React.FC = () => {
         setIsHalt(false);
         setInfoBlock(resetInfoBlock(infoBlock, memory.length))
         setMemory(new Array(0).fill({ status: CellStatus.Free }));
-        setEventLogs([[SUGGEST_INIT_LOG_ENTRY, undefined]]);
+        setEventLogs([SUGGEST_INIT_LOG_ENTRY]);
+        setGCEventLogs([]);
         clearHighlightedCells();
     }
 
@@ -52,12 +60,6 @@ const Visualization: React.FC = () => {
         }
         resetViz();
     };
-
-    const stepTick = () => {
-        if (!isRunning && ws?.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(STEP_MSG));
-        }
-    }
 
     const closeToast = () => {
         setToastMessage('');
@@ -86,14 +88,10 @@ const Visualization: React.FC = () => {
             const data = JSON.parse(event.data);
             switch (data.msgType) {
                 case 'TICK': {
+                    console.info(data);
                     if (data.log_entry) {
-                        // console.log(data.log_entry, data.instr_result);
-                        let eventLogEntry: EventLogDetails = [data.log_entry, data.instr_result];
+                        let eventLogEntry: LogEntry = { ...data.log_entry, instrResult: data.instr_result };
                         setEventLogs(prevLogs => [...prevLogs, eventLogEntry]);
-                    }
-
-                    if (data.memory) {
-                        setMemory(data.memory);
                     }
 
                     if (data.pause_on_return) {
@@ -104,12 +102,20 @@ const Visualization: React.FC = () => {
                         setInfoBlock(data.info_block)
                     }
 
+                    if (data.instr_result._type === "GC") {
+                        setPendingGCEvents(data.instr_result.gc_eventlog);
+                    } else {
+                        if (data.memory) {
+                            setMemory(data.memory);
+                        }
+                    }
+
                     break;
                 }
                 case 'HALT': {
                     setIsHalt(true);
                     setIsRunning(false);
-                    setEventLogs(prevLogs => [...prevLogs, [mkLogEntry("Program halted. Hit 'R' to restart"), undefined]]);
+                    setEventLogs(prevLogs => [...prevLogs, mkLogEntry("Program halted. Hit 'R' to restart")]);
                     break;
                 }
             }
@@ -125,17 +131,48 @@ const Visualization: React.FC = () => {
 
     useEffect(() => {
         let intervalId: any = null;
-
-        if (isRunning && ws?.readyState === WebSocket.OPEN) {
+        if (isRunning) {
             intervalId = setInterval(() => {
-                ws.send(JSON.stringify(TICK_MSG));
+                // Process a single GC event if any
+                if (pendingGCEvents.length > 0) {
+                    const currentGCEvent = pendingGCEvents[0];
+                    setGCEventLogs(prevLogs => [...prevLogs, currentGCEvent]);
+                    setPendingGCEvents(prevGCEvents => prevGCEvents.slice(1));
+                } else if (ws?.readyState === WebSocket.OPEN) {
+                    setGCEventLogs([]);
+                    ws.send(JSON.stringify(TICK_MSG));
+                }
             }, intervalRate);
         }
 
         return () => {
             intervalId && clearInterval(intervalId);
         };
-    }, [isRunning, ws, intervalRate]);
+    }, [isRunning, ws, intervalRate, gcEventLogs, pendingGCEvents]);
+
+    const stepTick = () => {
+        if (!isRunning) {
+            // If there's a pending GC event, process it
+            if (pendingGCEvents.length > 0) {
+                const currentGCEvent = pendingGCEvents[0];
+                setGCEventLogs(prevLogs => [...prevLogs, currentGCEvent]);
+                setPendingGCEvents(prevGCEvents => prevGCEvents.slice(1));
+            } else if (ws?.readyState === WebSocket.OPEN) {
+                setGCEventLogs([]);
+                ws.send(JSON.stringify(STEP_MSG));
+            }
+        }
+    }
+
+    const getLogEntryOps = (event: LogEntry | GCEvent): EventOps => {
+        if (isLogEntry(event)) return logEntryOps(event);
+        throw new Error("EventStream:ops unexpected for LogEntry");
+    };
+
+    const getGCEventOps = (event: LogEntry | GCEvent): EventOps => {
+        if (!isLogEntry(event)) return gcEventOps(event);
+        throw new Error("EventStream:ops unexpected for GCEvent");
+    };
 
     return (
         <div className="visualization">
@@ -149,7 +186,21 @@ const Visualization: React.FC = () => {
                         free_memory={infoBlock.free_memory}
                     />
                     <Slider minValue={100} maxValue={2000} intervalRate={intervalRate} updateIntervalRate={setIntervalRate} />
-                    <EventStream logs={eventLogs} highlightCells={highlightCells} clearHighlightedCells={clearHighlightedCells} />
+                    <EventStream
+                        className="log-entry"
+                        logs={eventLogs}
+                        ops={getLogEntryOps}
+                        highlightCells={highlightCells}
+                        clearHighlightedCells={clearHighlightedCells}
+                    />
+                    {gcEventLogs.length !== 0 && <EventStream
+                        className="gc-event"
+                        logs={gcEventLogs}
+                        ops={getGCEventOps}
+                        highlightCells={highlightCells}
+                        clearHighlightedCells={clearHighlightedCells}
+                    />}
+
                     <div className='extra-details'></div>
                 </div>
                 <HeapGrid memory={memory} highlightedCells={highlightedCells} />

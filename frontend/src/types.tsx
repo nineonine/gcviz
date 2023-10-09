@@ -10,7 +10,7 @@ export type InstrResult
     = { _type: 'Allocate'; addr: number, object: Object }
     | { _type: 'Read'; addr: number }
     | { _type: 'Write'; addr: number, value: Value }
-    | { _type: 'GC' }
+    | { _type: 'GC', gc_eventlog: GCEvent[] }
 
 interface Object {
     header: {};
@@ -35,12 +35,11 @@ export const TICK_MSG: WSMsgRequest = { type: 'Tick', pause_on_return: false }
 export const STEP_MSG: WSMsgRequest = { type: 'Tick', pause_on_return: true }
 export const RESET_MSG: WSMsgRequest = { type: 'Reset' }
 
-
 export interface LogEntry {
     frame_id: number | null;
     msg: string;
     source: LogSource;
-    InstrResult?: InstrResult;
+    instrResult?: InstrResult; // could be absent for client or system log messages
 }
 
 export enum LogSource {
@@ -51,8 +50,6 @@ export enum LogSource {
     ERROR = "ERROR",
     CLIENT = "CLIENT"
 }
-
-export type EventLogDetails = [LogEntry, InstrResult | undefined];
 
 export interface InfoBlockData {
     gc_type: string;
@@ -69,3 +66,8 @@ export const INFOBLOCK_DEFAULT: InfoBlockData = {
     allocd_objects: -1,
     free_memory: -1,
 }
+
+export type GCEvent =
+    | { type: "GCPhase", msg: string }
+    | { type: "MarkObject", addr: number }
+    | { type: "FreeObject", addr: number };

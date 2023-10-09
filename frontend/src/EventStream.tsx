@@ -1,15 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import './EventStream.css';
-import { logSrcToColor } from './logUtils';
-import { EventLogDetails, InstrResult } from './types';
+import { GCEvent, LogEntry } from './types';
+import { EventOps } from './eventlog';
 
 interface EventStreamProps {
-    logs: EventLogDetails[];
+    logs: LogEntry[] | GCEvent[];
+    ops: (event: LogEntry | GCEvent) => EventOps;
     highlightCells: (cells: number[]) => void;
     clearHighlightedCells: () => void;
+    className?: string;
 }
 
-const EventStream: React.FC<EventStreamProps> = ({ logs, highlightCells, clearHighlightedCells }) => {
+const EventStream: React.FC<EventStreamProps> = ({ className, logs, ops, highlightCells, clearHighlightedCells }) => {
     const endOfMessagesRef = useRef<null | HTMLDivElement>(null);
 
     useEffect(() => {
@@ -19,43 +21,24 @@ const EventStream: React.FC<EventStreamProps> = ({ logs, highlightCells, clearHi
     }, [logs]);
 
     return (
-        <div className="event-stream">
-            {logs.map(([log, ir], index) => (
-                <div className='event-log-entry' key={index}
-                    onMouseEnter={() => {
-                        console.info(ir)
-                        const cellsToHighlight: number[] = computeCells(ir) || 0;
-                        highlightCells(cellsToHighlight);
-                    }}
-                    onMouseLeave={clearHighlightedCells}
-                >
-                    [
-                    <span
-                        className="log-source"
-                        style={{ color: logSrcToColor(log.source) }}>
-                        <b>{log.source}</b>
-                    </span>
-                    ]: {log.msg} {log.frame_id !== null && <span>(Frame ID: <b>{log.frame_id}</b>)
-                    </span>}
-                </div>
-            ))}
+        <div className={`event-stream ${className || ''}`}>
+            {logs.map((event, index) => {
+                const eventOps = ops(event);
+                return (
+                    <div className='event-log-entry' key={index}
+                        onMouseEnter={() => {
+                            const cells = eventOps.cellsToHighlight();
+                            highlightCells(cells);
+                        }}
+                        onMouseLeave={clearHighlightedCells}
+                    >
+                        {eventOps.render()}
+                    </div>
+                );
+            })}
             <div ref={endOfMessagesRef}></div>
         </div>
     );
 }
 
 export default EventStream;
-
-// Compute the cells to highlight based on log.instruction
-const computeCells = (ir: InstrResult | undefined): number[] => {
-    if (!ir) return [];
-    switch (ir._type) {
-        case 'Allocate':
-            return Array.from({ length: ir.object.fields.length }, (_, i) => ir.addr + i);
-        case 'Write':
-        case 'Read':
-            return [ir.addr];
-        case 'GC':
-            return [];
-    }
-};

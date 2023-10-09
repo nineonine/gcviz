@@ -1,4 +1,3 @@
-// hooks/useHighlightState.ts
 import { useState, useCallback } from 'react';
 
 const useHighlightState = () => {

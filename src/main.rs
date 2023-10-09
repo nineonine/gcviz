@@ -53,7 +53,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                             Ok(instr_result) => {
                                 let last_log_entry = session.logs.back().cloned().clone();
                                 debug!(
-                                    "{}. [TICK]: {:?}; {:?}",
+                                    "ip:{} [TICK]: {:?}; Result: {:?}",
                                     session.instr_ptr, last_log_entry, instr_result
                                 );
                                 // Serialize the heap's memory and send it to the client.

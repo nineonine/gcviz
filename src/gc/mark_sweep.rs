@@ -1,5 +1,3 @@
-use log::debug;
-
 use crate::{
     error::VMError,
     heap::Heap,
@@ -8,7 +6,7 @@ use crate::{
 
 use super::{
     stats::GCStats,
-    {GCType, GarbageCollector},
+    GCEvent, {GCType, GarbageCollector},
 };
 
 pub struct MarkSweep {}
@@ -24,7 +22,7 @@ impl MarkSweep {
         MarkSweep {}
     }
 
-    fn mark_from_roots(&self, heap: &mut Heap) {
+    fn mark_from_roots(&self, heap: &mut Heap, eventlog: &mut Vec<GCEvent>) {
         // Clear all existing marks
         for obj in heap.objects.values_mut() {
             obj.header.marked = false;
@@ -33,11 +31,11 @@ impl MarkSweep {
         // Mark objects starting from roots
         let roots: Vec<usize> = heap.roots.iter().cloned().collect();
         for root in roots {
-            self.mark(&root, heap);
+            self.mark(&root, heap, eventlog);
         }
     }
 
-    fn mark(&self, addr: &ObjAddr, heap: &mut Heap) {
+    fn mark(&self, addr: &ObjAddr, heap: &mut Heap, eventlog: &mut Vec<GCEvent>) {
         let mut stack = Vec::new();
         stack.push(*addr);
 
@@ -48,6 +46,7 @@ impl MarkSweep {
                 }
 
                 obj.header.marked = true;
+                eventlog.push(GCEvent::MarkObject { addr: current_addr });
 
                 for field in &obj.fields {
                     if let Field::Ref {
@@ -61,7 +60,7 @@ impl MarkSweep {
         }
     }
 
-    fn sweep(&self, heap: &mut Heap) {
+    fn sweep(&self, heap: &mut Heap, eventlog: &mut Vec<GCEvent>) {
         let mut addresses_to_remove = Vec::new();
 
         for (addr, obj) in &heap.objects {
@@ -72,22 +71,26 @@ impl MarkSweep {
 
         for addr in addresses_to_remove {
             match heap.free_object(addr) {
-                Ok(_) => {}
+                Ok(_) => {
+                    eventlog.push(GCEvent::FreeObject { addr });
+                }
                 Err(_e) => panic!("sweep:free_object at {addr:}"),
             }
         }
 
         heap.merge_free_ranges();
-        debug!("____GC objects AFTER {:?}", heap.objects);
-        debug!("____ GC free ranges AFTER {:?}", heap.free_list);
     }
 }
 
 impl GarbageCollector for MarkSweep {
-    fn collect(&self, heap: &mut Heap) -> Result<GCStats, VMError> {
-        self.mark_from_roots(heap);
-        self.sweep(heap);
-        Ok(GCStats::new())
+    fn collect(&self, heap: &mut Heap) -> Result<(GCStats, Vec<GCEvent>), VMError> {
+        let mut eventlog = vec![GCEvent::phase("MarkSweep: START".to_string())];
+        eventlog.push(GCEvent::phase("Mark from roots".to_string()));
+        self.mark_from_roots(heap, &mut eventlog);
+        eventlog.push(GCEvent::phase("sweep".to_string()));
+        self.sweep(heap, &mut eventlog);
+        eventlog.push(GCEvent::phase("MarkSweep: END".to_string()));
+        Ok((GCStats::new(), eventlog))
     }
 
     fn ty(&self) -> GCType {

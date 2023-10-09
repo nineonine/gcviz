@@ -1,5 +1,3 @@
-use log::debug;
-
 use crate::{
     error::VMError,
     heap::Heap,
@@ -22,15 +20,12 @@ impl Allocator {
         is_root: bool,
     ) -> Result<ObjAddr, VMError> {
         let size = object.size();
-        debug!("____ ALLOC free ranges BEFORE {:?}", heap.free_list);
 
         if let Some(aligned_start) = self.find_suitable_free_block(heap, size) {
             heap.objects.insert(aligned_start, object);
             if is_root {
                 heap.roots.insert(aligned_start);
             }
-            debug!("____ ALLOC objects AFTER {:?}", heap.objects);
-            debug!("____ ALLOC free ranges AFTER {:?}", heap.free_list);
             Ok(aligned_start)
         } else {
             Err(VMError::AllocationError)

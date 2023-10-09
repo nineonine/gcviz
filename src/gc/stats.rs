@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GCStats;
+pub struct GCStats {}
 
 impl GCStats {
     pub fn new() -> Self {

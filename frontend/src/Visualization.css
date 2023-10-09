@@ -20,7 +20,7 @@
 }
 
 .extra-details {
-    flex: 1 1 33%; /* grow, shrink, base size */
+    flex: 1 1 10%; /* grow, shrink, base size */
     margin-top: auto;
     padding: 10px;
 }

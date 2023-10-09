@@ -102,7 +102,7 @@ impl Session {
                             ));
                             Self::visualize_mutator(&mut self.vm.heap.memory, *addr);
                         }
-                        InstrResult::GC { stats } => {
+                        InstrResult::GC { stats, .. } => {
                             self.enqueue_log(Log::new(
                                 format!("Collect garbage. Stats: {stats:?}"),
                                 LogSource::GC,
