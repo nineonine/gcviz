@@ -58,3 +58,27 @@
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+.cell.flashing {
+    animation: flashAnimation 0.5s ease-in-out infinite;
+}
+
+.cell.flickering {
+    animation: flickerAnimation 0.5s linear infinite;
+}
+
+.cell.highlighted-margins {
+    box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes flicker {
+    0%, 100% { opacity: 1; }
+    25% { opacity: 0.75; }
+    50% { opacity: 0.5; }
+    75% { opacity: 0.75; }
+}

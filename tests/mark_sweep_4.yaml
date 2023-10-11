@@ -1,0 +1,67 @@
+rts_config:
+  heap_size: 16
+  alignment: 2
+  gc_ty: MarkSweep
+
+program:
+- _type: Allocate
+  is_root: true
+  object:
+    header: {}
+    fields:
+      - addr: 2
+      - addr: 4
+
+- _type: Allocate
+  is_root: false
+  object:
+    header: {}
+    fields:
+      - value: 2
+
+- _type: Allocate
+  is_root: false
+  object:
+    header: {}
+    fields:
+      - value: 3
+
+- _type: Allocate
+  is_root: false
+  object:
+    header: {}
+    fields:
+      - value: 909
+      - addr: 8
+
+- _type: Allocate
+  is_root: true
+  object:
+    header: {}
+    fields:
+      - value: 222
+
+- _type: Write
+  addr: 0
+  value: 6
+
+- _type: Write
+  addr: 1
+  value: 7
+
+- _type: GC
+
+
+- _type: Allocate
+  is_root: true
+  object:
+    header: {}
+    fields:
+      - value: 888
+
+- _type: Allocate
+  is_root: true
+  object:
+    header: {}
+    fields:
+      - value: 111
