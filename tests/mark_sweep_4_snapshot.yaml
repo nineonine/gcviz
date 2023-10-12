@@ -1,8 +1,8 @@
 roots:
 - 0
 - 2
+- 4
 - 8
-- 10
 objects:
   0:
     header: {}
@@ -13,6 +13,10 @@ objects:
     header: {}
     fields:
     - value: 888
+  4:
+    header: {}
+    fields:
+    - value: 111
   6:
     header: {}
     fields:
@@ -22,29 +26,25 @@ objects:
     header: {}
     fields:
     - value: 222
-  10:
-    header: {}
-    fields:
-    - value: 111
 free_list:
 - - 3
-  - 3
-- - 9
   - 1
-- - 11
-  - 5
+- - 5
+  - 1
+- - 9
+  - 7
 memory:
 - status: Allocated
 - status: Allocated
 - status: Allocated
 - status: Free
-- status: Free
-- status: Free
-- status: Allocated
-- status: Allocated
 - status: Allocated
 - status: Free
 - status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Free
+- status: Free
 - status: Free
 - status: Free
 - status: Free

@@ -33,14 +33,15 @@ impl Allocator {
     }
 
     fn find_suitable_free_block(&self, heap: &mut Heap, size: usize) -> Option<ObjAddr> {
-        for (block_start, block_size) in &heap.free_list {
-            let aligned_start = self.aligned_position(*block_start);
+        // Iterate over the blocks in the FreeList
+        for (block_start, block_size) in heap.free_list.to_vec() {
+            let aligned_start = self.aligned_position(block_start);
             let block_end = aligned_start + size;
 
             // Check if the block can accommodate the required size after alignment
-            if block_end <= *block_start + *block_size {
+            if block_end <= block_start + block_size {
                 // Update free_list
-                self.split_free_block(heap, *block_start, *block_size, aligned_start, block_end);
+                self.split_free_block(heap, block_start, block_size, aligned_start, block_end);
                 return Some(aligned_start);
             }
         }
@@ -55,21 +56,21 @@ impl Allocator {
         aligned_start: ObjAddr,
         block_end: ObjAddr,
     ) {
-        // Remove the block being split from free_list
-        heap.free_list.retain(|&(start, _)| start != block_start);
+        // Remove the block being split from the FreeList
+        heap.free_list.remove(block_start);
 
         // Calculate remaining sizes after allocation
         let remaining_size_before = aligned_start - block_start;
         let remaining_size_after = block_start + block_size - block_end;
 
-        // If there's free space before the allocated block, push it back to free_list
+        // If there's free space before the allocated block, insert it back into the FreeList
         if remaining_size_before > 0 {
-            heap.free_list.push((block_start, remaining_size_before));
+            heap.free_list.insert(block_start, remaining_size_before);
         }
 
-        // If there's free space after the allocated block, push it back to free_list
+        // If there's free space after the allocated block, insert it back into the FreeList
         if remaining_size_after > 0 {
-            heap.free_list.push((block_end, remaining_size_after));
+            heap.free_list.insert(block_end, remaining_size_after);
         }
     }
 
@@ -86,7 +87,7 @@ impl Allocator {
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
-    use crate::{heap::MemoryCell, object::Field};
+    use crate::{free_list::FreeList, heap::MemoryCell, object::Field};
 
     use super::*;
 
@@ -95,7 +96,7 @@ mod tests {
             roots: BTreeSet::new(),
             objects: BTreeMap::new(),
             memory: vec![MemoryCell::free(); 10], // Assuming a size of 10 for simplicity
-            free_list: free_list,
+            free_list: FreeList::new(free_list),
         }
     }
 
@@ -106,7 +107,7 @@ mod tests {
 
         let result = allocator.find_suitable_free_block(&mut heap, 3);
         assert_eq!(result, Some(0));
-        assert_eq!(heap.free_list, vec![(3, 1)]); // 3 remaining cells after allocation
+        assert_eq!(heap.free_list.to_vec(), vec![(3, 1)]);
     }
 
     #[test]
@@ -116,7 +117,7 @@ mod tests {
 
         let result = allocator.find_suitable_free_block(&mut heap, 2);
         assert_eq!(result, Some(2));
-        assert_eq!(heap.free_list, vec![(8, 2)]);
+        assert_eq!(heap.free_list.to_vec(), vec![(8, 2)]);
     }
 
     #[test]
@@ -126,7 +127,7 @@ mod tests {
 
         let result = allocator.find_suitable_free_block(&mut heap, 3);
         assert_eq!(result, None);
-        assert_eq!(heap.free_list, vec![(0, 2)]); // Free list remains unchanged
+        assert_eq!(heap.free_list.to_vec(), vec![(0, 2)]); // Free list remains unchanged
     }
 
     #[test]
@@ -136,62 +137,62 @@ mod tests {
 
         let result = allocator.find_suitable_free_block(&mut heap, 3);
         assert_eq!(result, Some(2)); // Starts at 2 because of alignment
-        assert_eq!(heap.free_list, vec![(1, 1)]); // Only 1 cell before the allocated space
+        assert_eq!(heap.free_list.to_vec(), vec![(1, 1)]); // Only 1 cell before the allocated space
     }
 
     #[test]
     fn test_split_free_block_no_remainder() {
         let mut heap = Heap::new(8);
-        heap.free_list = vec![(0, 8)];
+        heap.free_list = free_list![(0, 8)];
 
         let allocator = Allocator::new(4);
         allocator.split_free_block(&mut heap, 0, 8, 0, 4);
 
-        assert_eq!(heap.free_list, vec![(4, 4)]);
+        assert_eq!(heap.free_list.to_vec(), vec![(4, 4)]);
     }
 
     #[test]
     fn test_split_free_block_remainder_before() {
         let mut heap = Heap::new(10);
-        heap.free_list = vec![(0, 8)];
+        heap.free_list = free_list![(0, 8)];
 
         let allocator = Allocator::new(4);
         allocator.split_free_block(&mut heap, 0, 8, 2, 6);
 
-        assert_eq!(heap.free_list, vec![(0, 2), (6, 2)]);
+        assert_eq!(heap.free_list.to_vec(), vec![(0, 2), (6, 2)]);
     }
 
     #[test]
     fn test_split_free_block_remainder_after() {
         let mut heap = Heap::new(10);
-        heap.free_list = vec![(0, 8)];
+        heap.free_list = free_list![(0, 8)];
 
         let allocator = Allocator::new(4);
         allocator.split_free_block(&mut heap, 0, 8, 0, 6);
 
-        assert_eq!(heap.free_list, vec![(6, 2)]);
+        assert_eq!(heap.free_list.to_vec(), vec![(6, 2)]);
     }
 
     #[test]
     fn test_split_free_block_remainders_both_sides() {
         let mut heap = Heap::new(10);
-        heap.free_list = vec![(0, 8)];
+        heap.free_list = free_list![(0, 8)];
 
         let allocator = Allocator::new(4);
         allocator.split_free_block(&mut heap, 0, 8, 2, 6);
 
-        assert_eq!(heap.free_list, vec![(0, 2), (6, 2)]);
+        assert_eq!(heap.free_list.to_vec(), vec![(0, 2), (6, 2)]);
     }
 
     #[test]
     fn test_split_free_block_no_matching_block() {
         let mut heap = Heap::new(8);
-        heap.free_list = vec![(0, 4), (4, 4)];
+        heap.free_list = free_list![(0, 4), (4, 4)];
 
         let allocator = Allocator::new(4);
         allocator.split_free_block(&mut heap, 8, 4, 8, 12);
 
-        assert_eq!(heap.free_list, vec![(0, 4), (4, 4)]); // Free list remains unchanged.
+        assert_eq!(heap.free_list.to_vec(), vec![(0, 4), (4, 4)]); // Free list remains unchanged.
     }
 
     #[test]
@@ -236,7 +237,7 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(heap.objects.len(), 1); // The object should be added to `heap.objects`.
         assert_eq!(heap.roots.len(), 1); // Since it's marked as root, it should be added to `heap.roots`.
-        assert_eq!(heap.free_list, vec![(3, 1)]); // 1 remaining cell after allocation.
+        assert_eq!(heap.free_list.to_vec(), vec![(3, 1)]); // 1 remaining cell after allocation.
     }
 
     #[test]
@@ -252,7 +253,7 @@ mod tests {
         let result = allocator.allocate(&mut heap, object, true);
         assert!(result.is_err()); // Allocation should fail.
         assert_eq!(heap.objects.len(), 0); // No object should be added.
-        assert_eq!(heap.free_list, vec![(0, 2)]); // Free list should remain unchanged.
+        assert_eq!(heap.free_list.to_vec(), vec![(0, 2)]); // Free list should remain unchanged.
     }
 
     #[test]

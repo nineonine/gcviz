@@ -1,11 +1,12 @@
 /// Application.
 pub mod session;
 
+///
+#[macro_use]
+pub mod free_list;
+
 /// UI memory representation.
 pub mod heap;
-
-///
-pub mod free_list;
 
 /// Mutator implementation.
 pub mod mutator;

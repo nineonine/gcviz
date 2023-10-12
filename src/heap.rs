@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::VMError,
-    free_list::{merge_free_list, FreeList},
+    free_list::FreeList,
     object::{ObjAddr, Object},
 };
 
@@ -48,7 +48,7 @@ impl Heap {
             roots: BTreeSet::new(),
             objects: BTreeMap::new(),
             memory: vec![MemoryCell::free(); size],
-            free_list: vec![(0, size)],
+            free_list: free_list![(0, size)],
         }
     }
 
@@ -68,7 +68,7 @@ impl Heap {
     }
 
     pub fn merge_free_ranges(&mut self) {
-        self.free_list = merge_free_list(self.free_list.to_vec());
+        self.free_list.merge_adjacent_blocks();
     }
 
     pub fn free_object(&mut self, addr: ObjAddr) -> Result<(), VMError> {
@@ -76,10 +76,10 @@ impl Heap {
             let size = object.size();
 
             // Add the deallocated space back to free_list
-            self.free_list.push((addr, size));
+            self.free_list.insert(addr, size);
 
             // Use unified merge function
-            self.free_list = merge_free_list(self.free_list.to_vec());
+            self.free_list.merge_adjacent_blocks();
 
             // Remove the deallocated object address from the roots set, if present
             self.roots.remove(&addr);

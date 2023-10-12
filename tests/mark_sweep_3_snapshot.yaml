@@ -17,10 +17,10 @@ objects:
     - value: 909
     - value: 606
 free_list:
-- - 8
-  - 2
 - - 3
   - 3
+- - 8
+  - 2
 memory:
 - status: Allocated
 - status: Allocated
