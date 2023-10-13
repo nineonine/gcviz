@@ -15,8 +15,8 @@ pub enum GCType {
 #[serde(tag = "type")]
 pub enum GCEvent {
     GCPhase { msg: String },
-    MarkObject { addr: usize },
-    FreeObject { addr: usize },
+    MarkObject { addr: usize, size: usize },
+    FreeObject { addr: usize, size: usize },
 }
 
 impl GCEvent {

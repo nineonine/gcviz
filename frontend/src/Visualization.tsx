@@ -133,21 +133,47 @@ const Visualization: React.FC = () => {
         };
     }, [program_name]);
 
-    const nextStep = useCallback((msg: WSMsgRequest)=> {
+    const nextStep = useCallback((msg: WSMsgRequest) => {
         // Process a single GC event if any
         if (pendingGCEvents.length > 0) {
+            const alterHeapState = (event: GCEvent): void => {
+                if (event.type === 'FreeObject') {
+                    const cellIndex: number = cellIndexFromEvent(event)!;
+                    setMemory(memory.map((c, i) => {
+                        if (i === cellIndex) {
+                            c.status = CellStatus.Free;
+                        }
+                        return c
+                    }));
+                } else if (event.type === 'MarkObject') {
+                    const cellIndex: number = cellIndexFromEvent(event)!;
+                    setMemory(memory.map((c, i) => {
+                        if (i === cellIndex) {
+                            c.status = CellStatus.Marked;
+                        }
+                        return c
+                    }));
+                }
+            }
             const currentGCEvent: GCEvent = pendingGCEvents[0];
             setGCEventLogs(prevLogs => [...prevLogs, currentGCEvent]);
             if (eventHasAnimation(currentGCEvent)) {
                 const cellIndex: number = cellIndexFromEvent(currentGCEvent)!;
                 enqueueAnimation(cellIndex, animationFromGCEvent(currentGCEvent));
             }
+
+            // Update heap cell state if needed.
+            // For example, when marking or freeing.
+            // Note that at the end of GC cycle, the final state of memory should equal
+            // to memory state that comes in next program step / instruction. (TODO: add an assert)
+            alterHeapState(currentGCEvent);
+
             setPendingGCEvents(prevGCEvents => prevGCEvents.slice(1));
         } else if (ws?.readyState === WebSocket.OPEN) {
             setGCEventLogs([]);
             ws.send(JSON.stringify(msg));
         }
-    }, [setGCEventLogs, enqueueAnimation, pendingGCEvents, ws]);
+    }, [setGCEventLogs, enqueueAnimation, pendingGCEvents, ws, memory]);
 
     useEffect(() => {
         let intervalId: any = null;
@@ -207,7 +233,7 @@ const Visualization: React.FC = () => {
 
                     <div className='extra-details'></div>
                 </div>
-                <HeapGrid memory={memory} highlightedCells={highlightedCells} animatedCells={animatedCells}/>
+                <HeapGrid memory={memory} highlightedCells={highlightedCells} animatedCells={animatedCells} />
             </div>
             <ControlPanel isRunning={isRunning}
                 toggleExecution={toggleExecution}

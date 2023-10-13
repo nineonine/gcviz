@@ -46,7 +46,10 @@ impl MarkSweep {
                 }
 
                 obj.header.marked = true;
-                eventlog.push(GCEvent::MarkObject { addr: current_addr });
+                eventlog.push(GCEvent::MarkObject {
+                    addr: current_addr,
+                    size: obj.size(),
+                });
 
                 for field in &obj.fields {
                     if let Field::Ref {
@@ -70,9 +73,13 @@ impl MarkSweep {
         }
 
         for addr in addresses_to_remove {
+            let obj_size = heap.objects.get(&addr).unwrap().size(); // Retrieve size before freeing the object
             match heap.free_object(addr) {
                 Ok(_) => {
-                    eventlog.push(GCEvent::FreeObject { addr });
+                    eventlog.push(GCEvent::FreeObject {
+                        addr,
+                        size: obj_size,
+                    });
                 }
                 Err(_e) => panic!("sweep:free_object at {addr:}"),
             }
