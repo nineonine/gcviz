@@ -49,10 +49,10 @@ export const gcEventOps = (event: GCEvent): EventOps => ({
                 message = event.msg;
                 break;
             case "MarkObject":
-                message = `Marked Object at address ${event.addr}`;
+                message = `Marked Object at address 0x${event.addr.toString(16)}`;
                 break;
             case "FreeObject":
-                message = `Freed Object at address ${event.addr}`;
+                message = `Freed Object at address 0x${event.addr.toString(16)}`;
                 break;
         }
         return (
