@@ -102,7 +102,10 @@ const Visualization: React.FC = () => {
                         setIsRunning(false);
                     }
 
-                    if (data.info_block) {
+                    if (data.info_block
+                        // for gc event we update the state in the client so no need to set it
+                        //(although we could potentially add some ASSERT here)
+                        && data.instr_result._type !== "GC") {
                         setInfoBlock(data.info_block)
                     }
 
@@ -168,12 +171,17 @@ const Visualization: React.FC = () => {
             // to memory state that comes in next program step / instruction. (TODO: add an assert)
             alterHeapState(currentGCEvent);
 
+            // Update InfoBlock as well
+            if (hasEffectOnInfoBlock(currentGCEvent)) {
+                setInfoBlock(newInfoBlockFromGCEvent(infoBlock, currentGCEvent));
+            }
+
             setPendingGCEvents(prevGCEvents => prevGCEvents.slice(1));
         } else if (ws?.readyState === WebSocket.OPEN) {
             setGCEventLogs([]);
             ws.send(JSON.stringify(msg));
         }
-    }, [setGCEventLogs, enqueueAnimation, pendingGCEvents, ws, memory]);
+    }, [setGCEventLogs, enqueueAnimation, pendingGCEvents, ws, memory, infoBlock]);
 
     useEffect(() => {
         let intervalId: any = null;
@@ -259,6 +267,10 @@ const eventHasAnimation = (gcevent: GCEvent): boolean => {
     return ['MarkObject', 'FreeObject'].includes(gcevent.type)
 }
 
+const hasEffectOnInfoBlock = (gcevent: GCEvent): boolean => {
+    return ['FreeObject'].includes(gcevent.type)
+}
+
 const animationFromGCEvent = (event: GCEvent): TimedAnimation => {
     let animation: TimedAnimation;
 
@@ -276,13 +288,24 @@ const animationFromGCEvent = (event: GCEvent): TimedAnimation => {
     return animation;
 }
 
-export const cellIndexFromEvent = (event: GCEvent): number | null => {
+const cellIndexFromEvent = (event: GCEvent): number | null => {
     switch (event.type) {
-        case "MarkObject":
-        case "FreeObject":
+        case 'MarkObject':
+        case 'FreeObject':
             return event.addr;
-        case "GCPhase":
+        case 'GCPhase':
         default:
             return null;
     }
 };
+
+const newInfoBlockFromGCEvent = (infoBlock: InfoBlockData, gcevent: GCEvent): InfoBlockData => {
+    console.info('before', infoBlock)
+    if (gcevent.type === 'FreeObject') {
+        infoBlock.free_memory += gcevent.size;
+        infoBlock.allocd_objects--;
+        console.info('After', infoBlock)
+        return infoBlock;
+    }
+    throw new Error('newInfoBlockFromGCEvent unexpected gcevent');
+}

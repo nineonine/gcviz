@@ -69,5 +69,5 @@ export const INFOBLOCK_DEFAULT: InfoBlockData = {
 
 export type GCEvent =
     | { type: "GCPhase", msg: string }
-    | { type: "MarkObject", addr: number }
-    | { type: "FreeObject", addr: number };
+    | { type: "MarkObject", addr: number, size: number }
+    | { type: "FreeObject", addr: number, size: number };
