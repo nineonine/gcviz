@@ -10,13 +10,10 @@ use crate::{
 };
 
 // Two-Finger Algorithm,
-// introduced by W. L. Edwards in 1974
+// introduced by Edwards in 1974
 pub fn compact(heap: &mut Heap, eventlog: &mut Vec<GCEvent>) {
     let start: usize = 0;
     let end: usize = heap.last_object_addr().unwrap();
-    eventlog.push(GCEvent::phase(format!(
-        "Run 2 finger compaction. Start: {start} End: {end}"
-    )));
     let forwarding_ptrs = relocate(heap, eventlog, start, end);
     update_references(heap, &forwarding_ptrs, eventlog);
 }
@@ -104,7 +101,8 @@ fn can_fit_into(heap: &Heap, move_in: ObjAddr, dest: ObjAddr) -> bool {
 
 fn move_object(heap: &mut Heap, eventlog: &mut Vec<GCEvent>, from: ObjAddr, to: ObjAddr) {
     if heap.objects.get(&from).is_some() {
-        eventlog.push(GCEvent::phase(format!("Moving object from {from} to {to}")));
+        let size = heap.objects.get(&from).unwrap().size();
+        eventlog.push(GCEvent::MoveObject{from, to, size});
         match heap.move_object(from, to) {
             Ok(res) => res,
             Err(_e) => panic!("move_object {_e}"),

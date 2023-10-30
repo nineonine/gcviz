@@ -36,7 +36,6 @@ impl MemoryCell {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum CellStatus {
     Free,
-    ToBeFree,
     Allocated,
     Marked,
     Used,

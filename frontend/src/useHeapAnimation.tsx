@@ -39,18 +39,23 @@ const useHeapAnimation = () => {
         setHighlightedCells([]);
     };
 
-    const enqueueAnimation = (cellIndex: number, animation: TimedAnimation) => {
-        // Remove any existing animation for this cell
-        setAnimatedCells(prevState => prevState.filter(cell => cell.cellIndex !== cellIndex));
-        setAnimatedCells(prevState => [...prevState, { cellIndex, animation }]);
+    const enqueueAnimation = (cellIndexes: number[], animation: TimedAnimation) => {
+        // Remove any existing animations for these cells
+        setAnimatedCells(prevState => prevState.filter(cell => !cellIndexes.includes(cell.cellIndex)));
 
-        // Set timeout to clear the animation after its duration
-        const timeout = window.setTimeout(() => {
-            setAnimatedCells(prevState => prevState.filter(cell => cell.cellIndex !== cellIndex));
-        }, animation.duration);
+        // Add new animations for these cells
+        const newAnimations: AnimatedCell[] = cellIndexes.map(cellIndex => ({ cellIndex, animation }));
+        setAnimatedCells(prevState => [...prevState, ...newAnimations]);
 
-        setAnimationTimeouts(prevState => [...prevState, timeout]);
-    };
+        // Set timeouts to clear the animations after their duration
+        const timeouts = cellIndexes.map(cellIndex => {
+            return window.setTimeout(() => {
+                setAnimatedCells(prevState => prevState.filter(cell => cell.cellIndex !== cellIndex));
+            }, animation.duration);
+        });
+
+        setAnimationTimeouts(prevState => [...prevState, ...timeouts]);
+    }
 
     const clearAnimations = () => {
         // Clear all animated cells

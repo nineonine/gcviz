@@ -38,6 +38,8 @@ export const gcEventOps = (event: GCEvent): EventOps => ({
             case "MarkObject":
             case "FreeObject":
                 return [event.addr];
+            case "MoveObject":
+                return Array.from({ length: event.size }, (_, i) => event.to + i);
             default:
                 return [];
         }
@@ -53,6 +55,9 @@ export const gcEventOps = (event: GCEvent): EventOps => ({
                 break;
             case "FreeObject":
                 message = `Freed Object at address 0x${event.addr.toString(16)}`;
+                break;
+            case "MoveObject":
+                message = `Move object 0x${event.from.toString(16)} -> 0x${event.to.toString(16)}`;
                 break;
             case "UpdateFwdPtr":
                 message = `Update Forward Pointer 0x${event.old.toString(16)} -> 0x${event.new.toString(16)}`;

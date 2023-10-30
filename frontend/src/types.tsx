@@ -1,6 +1,5 @@
 export enum CellStatus {
     Free = "Free",
-    ToBeFree = "ToBeFree",
     Allocated = "Allocated",
     Marked = "Marked",
     Used = "Used"
@@ -71,4 +70,5 @@ export type GCEvent =
     | { type: "GCPhase", msg: string }
     | { type: "MarkObject", addr: number, size: number }
     | { type: "FreeObject", addr: number, size: number }
+    | { type: "MoveObject", from: number, to: number, size: number }
     | { type: "UpdateFwdPtr", old: number, new: number };

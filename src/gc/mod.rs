@@ -66,6 +66,7 @@ pub enum GCEvent {
     GCPhase { msg: String },
     MarkObject { addr: usize, size: usize },
     FreeObject { addr: usize, size: usize },
+    MoveObject { from: usize, to: usize, size: usize },
     UpdateFwdPtr { old: usize, new: usize },
 }
 

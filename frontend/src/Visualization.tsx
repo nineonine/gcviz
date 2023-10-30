@@ -141,7 +141,7 @@ const Visualization: React.FC = () => {
         if (pendingGCEvents.length > 0) {
             const alterHeapState = (event: GCEvent): void => {
                 if (event.type === 'FreeObject') {
-                    const cellIndex: number = cellIndexFromEvent(event)!;
+                    const [cellIndex] = cellIndexesFromEvent(event)!;
                     setMemory(memory.map((c, i) => {
                         if (i === cellIndex) {
                             c.status = CellStatus.Free;
@@ -149,20 +149,30 @@ const Visualization: React.FC = () => {
                         return c
                     }));
                 } else if (event.type === 'MarkObject') {
-                    const cellIndex: number = cellIndexFromEvent(event)!;
+                    const [cellIndex] = cellIndexesFromEvent(event)!;
                     setMemory(memory.map((c, i) => {
                         if (i === cellIndex) {
                             c.status = CellStatus.Marked;
                         }
                         return c
                     }));
+                } else if (event.type === 'MoveObject') {
+                    const { from, to, size } = event;
+                    setMemory(memory.map((c, i) => {
+                        if (i >= from && i < from + size) {
+                            c.status = CellStatus.Free;
+                        } else if (i >= to && i < to + size) {
+                            c.status = CellStatus.Allocated;
+                        }
+                        return c;
+                    }));
                 }
             }
             const currentGCEvent: GCEvent = pendingGCEvents[0];
             setGCEventLogs(prevLogs => [...prevLogs, currentGCEvent]);
             if (eventHasAnimation(currentGCEvent)) {
-                const cellIndex: number = cellIndexFromEvent(currentGCEvent)!;
-                enqueueAnimation(cellIndex, animationFromGCEvent(currentGCEvent));
+                const cellIndexes: number[] = cellIndexesFromEvent(currentGCEvent)!;
+                enqueueAnimation(cellIndexes, animationFromGCEvent(currentGCEvent));
             }
 
             // Update heap cell state if needed.
@@ -288,14 +298,18 @@ const animationFromGCEvent = (event: GCEvent): TimedAnimation => {
     return animation;
 }
 
-const cellIndexFromEvent = (event: GCEvent): number | null => {
+const cellIndexesFromEvent = (event: GCEvent): number[] => {
     switch (event.type) {
         case 'MarkObject':
         case 'FreeObject':
-            return event.addr;
+            return [event.addr];
+        case 'MoveObject':
+            return [event.from, event.to];
+        case 'UpdateFwdPtr':
+            return [event.old, event.new];
         case 'GCPhase':
         default:
-            return null;
+            return [];
     }
 };
 

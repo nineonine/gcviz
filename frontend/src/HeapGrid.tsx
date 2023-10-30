@@ -11,7 +11,6 @@ interface HeapGridProps {
 
 const cellStyleMap: Record<CellStatus, string> = {
     [CellStatus.Free]: 'white',
-    [CellStatus.ToBeFree]: 'magenta',
     [CellStatus.Allocated]: '#7CCD7C',
     [CellStatus.Marked]: 'yellow',
     [CellStatus.Used]: '#228B22',
