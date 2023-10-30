@@ -43,12 +43,6 @@ const HeapGrid: React.FC<HeapGridProps> = ({ memory, highlightedCells, animatedC
                     animation: `flicker ${cellAnimation.animation.duration}ms`,
                     opacity: cellAnimation.animation.opacity.toString()
                 };
-            case 'highlighted-margins':
-                return {
-                    ...baseStyle,
-                    border: '2px solid black',
-                    opacity: cellAnimation.animation.opacity.toString()
-                };
             default:
                 return baseStyle;
         }

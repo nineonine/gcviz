@@ -112,6 +112,10 @@ impl Field {
     pub fn new_scalar(value: usize) -> Self {
         Field::Scalar { value }
     }
+
+    pub fn new_ref(addr: Address) -> Self {
+        Field::Ref { addr }
+    }
 }
 
 impl Serialize for Field {
@@ -162,7 +166,7 @@ impl fmt::Display for Field {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Address {
     Ptr(ObjAddr),
     Null,

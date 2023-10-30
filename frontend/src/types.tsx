@@ -70,4 +70,5 @@ export const INFOBLOCK_DEFAULT: InfoBlockData = {
 export type GCEvent =
     | { type: "GCPhase", msg: string }
     | { type: "MarkObject", addr: number, size: number }
-    | { type: "FreeObject", addr: number, size: number };
+    | { type: "FreeObject", addr: number, size: number }
+    | { type: "UpdateFwdPtr", old: number, new: number };

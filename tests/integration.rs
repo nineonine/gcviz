@@ -99,3 +99,8 @@ fn test_mark_sweep_3() {
 fn test_mark_sweep_4() {
     assert!(__test("mark_sweep_4").is_ok());
 }
+
+#[test]
+fn mark_compact_two_fingers_1() {
+    assert!(__test("mark_compact_two_fingers_1").is_ok());
+}

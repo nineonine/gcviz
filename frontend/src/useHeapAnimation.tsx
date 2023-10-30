@@ -7,7 +7,7 @@ export interface TimedAnimation {
     newColor?: string;
 }
 
-type AnimationType = 'flashing' | 'flickering' | 'highlighted-margins';
+type AnimationType = 'flashing' | 'flickering';
 
 export interface AnimatedCell {
     cellIndex: number;

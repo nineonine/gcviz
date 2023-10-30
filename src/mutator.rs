@@ -20,7 +20,7 @@ impl Mutator {
     }
 
     fn read_rec(&self, heap: &Heap, address: ObjAddr) -> Result<Value, VMError> {
-        let object_addr = heap.lookup_object(address)?;
+        let object_addr = heap.lookup_object_addr(address)?;
         let object = heap
             .objects
             .get(&object_addr)
@@ -44,7 +44,7 @@ impl Mutator {
     }
 
     pub fn write(&self, heap: &mut Heap, address: ObjAddr, value: Value) -> Result<(), VMError> {
-        let object_addr = heap.lookup_object(address)?;
+        let object_addr = heap.lookup_object_addr(address)?;
         let object = heap
             .objects
             .get_mut(&object_addr)

@@ -295,4 +295,45 @@ mod tests {
         assert_eq!(heap.objects.len(), 1);
         assert_eq!(heap.roots.len(), 0);
     }
+
+    #[test]
+    fn test_calc_memory_after_allocate() {
+        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
+        let allocator = Allocator { alignment: 0 };
+
+        assert_eq!(heap.calc_free_memory(), 10);
+
+        let object1 = Object::new(vec![Field::new_scalar(1), Field::new_scalar(2)]);
+        let addr1 = allocator.allocate(&mut heap, object1, true).unwrap();
+
+        assert_eq!(heap.calc_free_memory(), 8);
+
+        let res = heap.free_object(addr1);
+        assert_eq!(res, Ok(()));
+        assert_eq!(heap.calc_free_memory(), 10);
+    }
+
+    #[test]
+    fn test_free_object() {
+        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
+        let allocator = Allocator { alignment: 0 };
+        let object = Object::new(vec![
+            Field::new_scalar(1),
+            Field::new_scalar(2),
+            Field::new_scalar(3),
+        ]);
+
+        let result = allocator.allocate(&mut heap, object, true);
+        assert_eq!(result, Ok(0));
+        assert_eq!(heap.calc_free_memory(), 7);
+        assert_eq!(heap.objects.len(), 1);
+        assert_eq!(heap.roots.len(), 1);
+
+        let res = heap.free_object(result.unwrap());
+        assert_eq!(res, Ok(()));
+        assert_eq!(heap.calc_free_memory(), 10);
+        assert!(heap.objects.is_empty());
+        assert!(heap.roots.is_empty());
+        assert_eq!(heap.free_list.inner.len(), 1);
+    }
 }

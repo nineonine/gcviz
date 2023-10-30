@@ -54,6 +54,9 @@ export const gcEventOps = (event: GCEvent): EventOps => ({
             case "FreeObject":
                 message = `Freed Object at address 0x${event.addr.toString(16)}`;
                 break;
+            case "UpdateFwdPtr":
+                message = `Update Forward Pointer 0x${event.old.toString(16)} -> 0x${event.new.toString(16)}`;
+                break;
         }
         return (
             <> [

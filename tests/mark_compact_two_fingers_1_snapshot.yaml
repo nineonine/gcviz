@@ -1,0 +1,37 @@
+roots:
+- 0
+objects:
+  0:
+    header: {}
+    fields:
+    - value: 0
+    - value: 0
+    - value: 0
+    - value: 0
+  4:
+    header: {}
+    fields:
+    - value: 0
+    - value: 0
+    - value: 0
+    - value: 0
+free_list:
+- - 4
+  - 12
+memory:
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Allocated
+- status: Free
+- status: Free
+- status: Free
+- status: Free
+- status: Free
+- status: Free
+- status: Free
+- status: Free

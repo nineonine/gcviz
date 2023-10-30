@@ -9,8 +9,8 @@ use tokio_tungstenite::{
 };
 use tungstenite::Message;
 
-use gcviz::file_utils::CustomError;
 use gcviz::{file_utils, wsmsg::WSMessageResponse};
+use gcviz::{file_utils::CustomError, gc::init_collector};
 use gcviz::{
     program::Program,
     wsmsg::{WSMessageRequest, WSMessageRequestType},
@@ -51,7 +51,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                         }
                         match session.tick() {
                             Ok(instr_result) => {
-                                let last_log_entry = session.logs.back().cloned().clone();
+                                let last_log_entry = session.logs.back().cloned();
                                 debug!(
                                     "ip:{} [TICK]: {:?}; Result: {:?}",
                                     session.instr_ptr, last_log_entry, instr_result
@@ -144,6 +144,7 @@ fn load_program(session: &mut Session, file_name: Option<String>) -> Result<(), 
     session.vm.reset_heap(rts_cfg.heap_size);
     session.rts_cfg = rts_cfg;
     session.vm.allocator.alignment = session.rts_cfg.alignment;
+    session.vm.collector = init_collector(&session.rts_cfg.gc_ty);
     assert!(session.rts_cfg.alignment == session.vm.allocator.alignment);
     Ok(())
 }
