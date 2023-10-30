@@ -321,5 +321,6 @@ const newInfoBlockFromGCEvent = (infoBlock: InfoBlockData, gcevent: GCEvent): In
         console.info('After', infoBlock)
         return infoBlock;
     }
+    // TODO: MoveObject
     throw new Error('newInfoBlockFromGCEvent unexpected gcevent');
 }
