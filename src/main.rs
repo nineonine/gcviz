@@ -56,6 +56,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                                 .expect("Failed to serialize Halt message");
                             ws_stream.send(Message::Text(halt_msg)).await?;
                             already_said_halt = true;
+                            continue;
                         }
                         match session.tick() {
                             Ok(instr_result) => {
@@ -82,6 +83,7 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream) -> Result<()> {
                         }
                     }
                     WSMessageRequestType::Reset => {
+                        info!("Program reset");
                         already_said_halt = false;
                         session.restart();
                     }
