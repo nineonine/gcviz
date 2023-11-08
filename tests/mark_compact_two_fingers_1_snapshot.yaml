@@ -1,5 +1,6 @@
 roots:
 - 0
+- 4
 objects:
   0:
     header: {}
@@ -16,8 +17,8 @@ objects:
     - value: 0
     - value: 0
 free_list:
-- - 4
-  - 12
+- - 8
+  - 4
 memory:
 - status: Allocated
 - status: Allocated
