@@ -104,3 +104,8 @@ fn test_mark_sweep_4() {
 fn mark_compact_two_fingers_1() {
     assert!(__test("mark_compact_two_fingers_1").is_ok());
 }
+
+#[test]
+fn mark_compact_two_fingers_2() {
+    assert!(__test("mark_compact_two_fingers_2").is_ok());
+}

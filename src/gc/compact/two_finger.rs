@@ -41,7 +41,7 @@ fn relocate(
         }
 
         // Note, that this only works well for regions with allocated objects of same size.
-        // The books says: "Note that the quality of compaction depends on the size of the
+        // The book says: "Note that the quality of compaction depends on the size of the
         // gap at free closely matching the size of the live object at scan. Unless this
         // algorithm is used on fixed-size objects, the degree of defragmentation might
         // be very poor indeed."
@@ -122,11 +122,11 @@ fn update_references(
             } = field
             {
                 if let Some(new_addr) = forwarding_pointers.get(old) {
-                    *old = *new_addr;
                     eventlog.push(GCEvent::UpdateFwdPtr {
                         old: *old,
                         new: *new_addr,
                     });
+                    *old = *new_addr;
                 }
             }
         }

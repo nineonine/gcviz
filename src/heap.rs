@@ -105,6 +105,9 @@ impl Heap {
             return Err(VMError::SegmentationFault);
         };
 
+        // it is important to fecth this info BEFORE wefree_object (because it removes it form roots)
+        let is_root = self.roots.contains(&from);
+
         // Free the memory at the `from` address
         // this updates roots, objects and free_list
         self.free_object(from)?;
@@ -113,8 +116,7 @@ impl Heap {
         self.objects.insert(to, object.clone());
 
         // If the object was a root at its old address, then update the roots set
-        if self.roots.contains(&from) {
-            self.roots.remove(&from);
+        if is_root {
             self.roots.insert(to);
         }
 
@@ -122,7 +124,7 @@ impl Heap {
         // and adding a block that accounts for the object's size
         let object_size = object.size();
         self.objects.insert(to, object);
-        self.free_list.insert(to, object_size);
+        self.free_list.insert(from, object_size);
         // update free_list to account for new block
         self.free_list.merge_adjacent_blocks();
 

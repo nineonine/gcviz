@@ -1,0 +1,45 @@
+rts_config:
+  heap_size: 16
+  alignment: 0
+  gc_ty: MarkCompact_TwoFinger
+
+program:
+- _type: Allocate
+  is_root: true
+  object:
+    header: {}
+    fields:
+      - value: 0
+      - value: 0
+      - addr: null
+      - addr: null
+
+- _type: Allocate
+  is_root: false
+  object:
+    header: {}
+    fields:
+      - value: 3
+      - value: 3
+      - value: 3
+      - value: 3
+
+- _type: Allocate
+  is_root: true
+  object:
+    header: {}
+    fields:
+      - addr: 0
+      - addr: 1
+      - value: 909
+      - value: 909
+
+- _type: Write
+  addr: 2
+  value: 8
+
+- _type: Write
+  addr: 3
+  value: 9
+
+- _type: GC
