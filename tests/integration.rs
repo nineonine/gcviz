@@ -114,3 +114,8 @@ fn mark_compact_two_fingers_2() {
 fn mark_compact_lisp2_1() {
     assert!(__test("mark_compact_lisp2_1").is_ok());
 }
+
+#[test]
+fn mark_compact_lisp2_2() {
+    assert!(__test("mark_compact_lisp2_2").is_ok());
+}
