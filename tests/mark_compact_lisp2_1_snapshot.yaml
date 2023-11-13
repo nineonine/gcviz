@@ -3,19 +3,21 @@ roots:
 - 4
 objects:
   0:
-    header: {}
+    header:
+      fwd_addr: 0
     fields:
     - value: 0
     - value: 0
-    - value: 0
-    - value: 0
+    - addr: 4
+    - addr: 5
   4:
-    header: {}
+    header:
+      fwd_addr: 4
     fields:
-    - value: 0
-    - value: 0
-    - value: 0
-    - value: 0
+    - addr: 0
+    - addr: 1
+    - value: 909
+    - value: 909
 free_list:
 - - 8
   - 8

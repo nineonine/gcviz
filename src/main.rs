@@ -142,8 +142,8 @@ fn load_program(session: &mut Session, file_name: Option<String>) -> Result<(), 
     session.program = program;
     session.vm.reset_heap(rts_cfg.heap_size);
     session.rts_cfg = rts_cfg;
-    session.vm.allocator.alignment = session.rts_cfg.alignment;
+    session.vm.heap.alignment = session.rts_cfg.alignment;
     session.vm.collector = init_collector(&session.rts_cfg.gc_ty);
-    assert!(session.rts_cfg.alignment == session.vm.allocator.alignment);
+    assert!(session.rts_cfg.alignment == session.vm.heap.alignment);
     Ok(())
 }

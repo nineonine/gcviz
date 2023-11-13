@@ -58,7 +58,11 @@ impl FreeList {
 
     /// Inserts a new free block.
     pub fn insert(&mut self, start: usize, size: usize) {
-        self.inner.insert(start, size);
+        if let Some(&len) = self.inner.get(&start) {
+            self.inner.insert(start, usize::max(size, len));
+        } else {
+            self.inner.insert(start, size);
+        }
         self.merge_adjacent_blocks();
     }
 
@@ -194,5 +198,23 @@ mod tests {
         let mut free_list = FreeList::new(blocks);
         free_list.merge_adjacent_blocks();
         assert_eq!(free_list.to_vec(), vec![(0, 1000)]);
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut free_list = FreeList::new(vec![(8, 8)]);
+        free_list.insert(8, 4);
+        assert_eq!(free_list.inner.len(), 1);
+        assert_eq!(free_list.inner.get(&8), Some(&8));
+        free_list.insert(8, 16);
+        assert_eq!(free_list.inner.len(), 1);
+        assert_eq!(free_list.inner.get(&8), Some(&16));
+        free_list.insert(24, 2);
+        assert_eq!(free_list.inner.len(), 1);
+        assert_eq!(free_list.inner.get(&8), Some(&18));
+        free_list.insert(28, 2);
+        assert_eq!(free_list.inner.len(), 2);
+        assert_eq!(free_list.inner.get(&8), Some(&18));
+        assert_eq!(free_list.inner.get(&28), Some(&2));
     }
 }

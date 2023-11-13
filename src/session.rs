@@ -142,7 +142,7 @@ impl Session {
         // Reinitialize the VM
         let new_collector = self.vm.collector.new_instance();
         self.vm = VirtualMachine::new(
-            self.vm.allocator.alignment,
+            self.vm.heap.alignment,
             self.vm.heap.memory.len(),
             new_collector,
         );

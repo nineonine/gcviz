@@ -14,6 +14,7 @@ pub struct Heap {
     pub objects: BTreeMap<ObjAddr, Object>,
     pub free_list: FreeList,
     pub memory: Vec<MemoryCell>,
+    pub alignment: usize,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -42,12 +43,13 @@ pub enum CellStatus {
 }
 
 impl Heap {
-    pub fn new(size: usize) -> Self {
+    pub fn new(size: usize, alignment: usize) -> Self {
         Heap {
             roots: BTreeSet::new(),
             objects: BTreeMap::new(),
             memory: vec![MemoryCell::free(); size],
             free_list: free_list![(0, size)],
+            alignment,
         }
     }
 
@@ -105,9 +107,8 @@ impl Heap {
             return Err(VMError::SegmentationFault);
         };
 
-        // it is important to fecth this info BEFORE wefree_object (because it removes it form roots)
+        // it is important to fetch this info BEFORE we free_object (because it removes it from roots)
         let is_root = self.roots.contains(&from);
-
         // Free the memory at the `from` address
         // this updates roots, objects and free_list
         self.free_object(from)?;
@@ -176,6 +177,13 @@ impl Heap {
         }
         None
     }
+
+    pub fn aligned_position(&self, position: usize) -> usize {
+        if self.alignment == 0 {
+            return position;
+        }
+        (position + (self.alignment - 1)) & !(self.alignment - 1)
+    }
 }
 
 #[cfg(test)]
@@ -186,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_new_heap() {
-        let heap = Heap::new(100);
+        let heap = Heap::new(100, 0);
         assert_eq!(heap.memory.len(), 100);
         assert_eq!(heap.calc_free_memory(), 100);
         assert!(heap.objects.is_empty());
@@ -194,7 +202,7 @@ mod tests {
 
     #[test]
     fn test_lookup_object_addr() {
-        let mut heap = Heap::new(10);
+        let mut heap = Heap::new(10, 0);
         let obj = Object::new(vec![
             Field::new_scalar(1),
             Field::new_scalar(2),
@@ -209,7 +217,7 @@ mod tests {
 
     #[test]
     fn test_next_object_addr() {
-        let mut heap = Heap::new(100);
+        let mut heap = Heap::new(100, 0);
 
         // Add objects to the heap.
         let o1 = Object::new(vec![Field::new_scalar(1)]);
@@ -233,7 +241,7 @@ mod tests {
 
     #[test]
     fn test_last_object_addr() {
-        let mut heap = Heap::new(100);
+        let mut heap = Heap::new(100, 0);
 
         // Initially, the heap is empty, so the last object address should be None.
         assert_eq!(heap.last_object_addr(), None);
@@ -256,7 +264,7 @@ mod tests {
 
     #[test]
     fn test_next_prev_object_addr() {
-        let mut heap = Heap::new(100);
+        let mut heap = Heap::new(100, 0);
         // Add multiple objects and navigate between them using next/prev functions.
         let o1 = Object::new(vec![Field::new_scalar(1)]);
         let o2 = Object::new(vec![Field::new_scalar(1)]);
@@ -278,5 +286,33 @@ mod tests {
         // Check for wrong addresses.
         assert_eq!(heap.next_object_addr(15), None);
         assert_eq!(heap.prev_object_addr(15), None);
+    }
+
+    #[test]
+    fn test_aligned_position() {
+        let heap = Heap::new(100, 4);
+
+        assert_eq!(heap.aligned_position(0), 0);
+        assert_eq!(heap.aligned_position(1), 4);
+        assert_eq!(heap.aligned_position(2), 4);
+        assert_eq!(heap.aligned_position(3), 4);
+        assert_eq!(heap.aligned_position(4), 4);
+        assert_eq!(heap.aligned_position(5), 8);
+
+        let heap = Heap::new(100, 8);
+
+        assert_eq!(heap.aligned_position(0), 0);
+        assert_eq!(heap.aligned_position(5), 8);
+        assert_eq!(heap.aligned_position(8), 8);
+        assert_eq!(heap.aligned_position(9), 16);
+    }
+
+    #[test]
+    fn test_no_alignment() {
+        let heap = Heap::new(100, 0);
+
+        for i in 0..10 {
+            assert_eq!(heap.aligned_position(i), i);
+        }
     }
 }

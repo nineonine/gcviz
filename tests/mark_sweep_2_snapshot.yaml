@@ -32,3 +32,4 @@ memory:
 - status: Free
 - status: Allocated
 - status: Free
+alignment: 2

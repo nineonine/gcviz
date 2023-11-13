@@ -18,10 +18,10 @@ pub struct VirtualMachine {
 impl VirtualMachine {
     pub fn new(alignment: usize, heap_size: usize, gc: Box<dyn GarbageCollector>) -> Self {
         VirtualMachine {
-            allocator: Allocator::new(alignment),
+            allocator: Allocator::new(),
             mutator: Mutator::new(),
             collector: gc,
-            heap: Heap::new(heap_size),
+            heap: Heap::new(heap_size, alignment),
         }
     }
 
@@ -55,6 +55,6 @@ impl VirtualMachine {
     }
 
     pub fn reset_heap(&mut self, size: usize) {
-        self.heap = Heap::new(size);
+        self.heap = Heap::new(size, self.heap.alignment);
     }
 }

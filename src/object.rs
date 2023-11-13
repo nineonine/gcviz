@@ -20,7 +20,10 @@ impl Object {
 
     pub fn new(fields: Vec<Field>) -> Self {
         Self {
-            header: ObjHeader { marked: false },
+            header: ObjHeader {
+                marked: false,
+                fwd_addr: None,
+            },
             fields,
         }
     }
@@ -48,7 +51,10 @@ impl Object {
 
         // Create an object with generated fields
         Object {
-            header: ObjHeader { marked: false },
+            header: ObjHeader {
+                marked: false,
+                fwd_addr: None,
+            },
             fields,
         }
     }
@@ -72,6 +78,7 @@ impl fmt::Display for Object {
 #[derive(Clone, Debug)]
 pub struct ObjHeader {
     pub marked: bool,
+    pub fwd_addr: Option<usize>,
 }
 
 impl Serialize for ObjHeader {
@@ -79,26 +86,37 @@ impl Serialize for ObjHeader {
     where
         S: Serializer,
     {
-        serializer.serialize_map(None)?.end()
+        let mut map = serializer.serialize_map(None)?;
+
+        if let Some(fwd_addr) = self.fwd_addr {
+            map.serialize_entry("fwd_addr", &fwd_addr)?;
+        }
+
+        map.end()
     }
 }
 
 impl<'de> Deserialize<'de> for ObjHeader {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: Deserializer<'de>,
     {
         let mut marked = false;
+        let mut fwd_addr = None;
 
-        let v: Option<HashMap<String, bool>> = Option::deserialize(deserializer)?;
+        let v: Option<HashMap<String, serde_json::Value>> = Option::deserialize(deserializer)?;
 
         if let Some(map) = v {
             if let Some(m) = map.get("marked") {
-                marked = *m;
+                marked = m.as_bool().unwrap_or(false);
+            }
+
+            if let Some(f) = map.get("fwd_addr") {
+                fwd_addr = f.as_u64().map(|val| val as usize);
             }
         }
 
-        Ok(ObjHeader { marked })
+        Ok(ObjHeader { marked, fwd_addr })
     }
 }
 

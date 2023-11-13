@@ -9,6 +9,7 @@ use super::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CompactAlgorithm {
     TwoFinger,
+    Lisp2,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,6 +32,9 @@ impl MarkCompact {
         match self.algo {
             CompactAlgorithm::TwoFinger => {
                 compact::two_finger::compact(heap, eventlog);
+            }
+            CompactAlgorithm::Lisp2 => {
+                compact::lisp_2::compact(heap, eventlog);
             }
         }
     }

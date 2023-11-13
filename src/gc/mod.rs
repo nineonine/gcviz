@@ -1,3 +1,4 @@
+pub mod common;
 pub mod compact;
 pub mod mark_compact;
 pub mod mark_sweep;
@@ -38,6 +39,7 @@ impl ToString for CompactAlgorithm {
     fn to_string(&self) -> String {
         match self {
             CompactAlgorithm::TwoFinger => "TwoFinger".to_string(),
+            CompactAlgorithm::Lisp2 => "Lisp2".to_string(),
         }
     }
 }
@@ -52,9 +54,10 @@ impl<'de> Deserialize<'de> for GCType {
         match s.as_str() {
             "MarkSweep" => Ok(GCType::MarkSweep),
             "MarkCompact_TwoFinger" => Ok(GCType::MarkCompact(CompactAlgorithm::TwoFinger)),
+            "MarkCompact_Lisp2" => Ok(GCType::MarkCompact(CompactAlgorithm::Lisp2)),
             _ => Err(serde::de::Error::unknown_variant(
                 &s,
-                &["MarkSweep", "MarkCompactTwoFinger"],
+                &["MarkSweep", "MarkCompactTwoFinger, MarkCompactLisp2"],
             )),
         }
     }

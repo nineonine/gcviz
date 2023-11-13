@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     gc::{
+        common::move_object,
         object_marker::{is_marked, unmark},
         GCEvent,
     },
@@ -97,17 +98,6 @@ fn can_fit_into(heap: &Heap, move_in: ObjAddr, dest: ObjAddr) -> bool {
     let obj_to_be_moved = heap.objects.get(&move_in).unwrap();
     let obj_to_be_removed = heap.objects.get(&dest).unwrap();
     obj_to_be_moved.size() <= obj_to_be_removed.size()
-}
-
-fn move_object(heap: &mut Heap, eventlog: &mut Vec<GCEvent>, from: ObjAddr, to: ObjAddr) {
-    if heap.objects.get(&from).is_some() {
-        let size = heap.objects.get(&from).unwrap().size();
-        eventlog.push(GCEvent::MoveObject { from, to, size });
-        match heap.move_object(from, to) {
-            Ok(res) => res,
-            Err(_e) => panic!("move_object {_e}"),
-        };
-    }
 }
 
 fn update_references(

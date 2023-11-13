@@ -4,13 +4,11 @@ use crate::{
     object::{ObjAddr, Object},
 };
 
-pub struct Allocator {
-    pub alignment: usize,
-}
+pub struct Allocator {}
 
 impl Allocator {
-    pub fn new(alignment: usize) -> Self {
-        Allocator { alignment }
+    pub fn new() -> Self {
+        Allocator {}
     }
 
     pub fn allocate(
@@ -35,7 +33,7 @@ impl Allocator {
     fn find_suitable_free_block(&self, heap: &mut Heap, size: usize) -> Option<ObjAddr> {
         // Iterate over the blocks in the FreeList
         for (block_start, block_size) in heap.free_list.to_vec() {
-            let aligned_start = self.aligned_position(block_start);
+            let aligned_start = heap.aligned_position(block_start);
             let block_end = aligned_start + size;
 
             // Check if the block can accommodate the required size after alignment
@@ -73,16 +71,13 @@ impl Allocator {
             heap.free_list.insert(block_end, remaining_size_after);
         }
     }
-
-    // crazy magic! thanks chatbot
-    fn aligned_position(&self, position: usize) -> usize {
-        if self.alignment == 0 {
-            return position;
-        }
-        (position + (self.alignment - 1)) & !(self.alignment - 1)
-    }
 }
 
+impl Default for Allocator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 #[cfg(test)]
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
@@ -91,19 +86,20 @@ mod tests {
 
     use super::*;
 
-    fn create_heap_with_free_list(free_list: Vec<(ObjAddr, usize)>) -> Heap {
+    fn create_heap_with_free_list(alignment: usize, free_list: Vec<(ObjAddr, usize)>) -> Heap {
         Heap {
             roots: BTreeSet::new(),
             objects: BTreeMap::new(),
             memory: vec![MemoryCell::free(); 10], // Assuming a size of 10 for simplicity
             free_list: FreeList::new(free_list),
+            alignment,
         }
     }
 
     #[test]
     fn test_find_suitable_free_block_with_sufficient_space() {
-        let mut heap = create_heap_with_free_list(vec![(0, 4)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 4)]);
+        let allocator = Allocator {};
 
         let result = allocator.find_suitable_free_block(&mut heap, 3);
         assert_eq!(result, Some(0));
@@ -112,8 +108,8 @@ mod tests {
 
     #[test]
     fn test_find_suitable_free_block_first_block() {
-        let mut heap = create_heap_with_free_list(vec![(2, 2), (8, 2)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(2, 2), (8, 2)]);
+        let allocator = Allocator {};
 
         let result = allocator.find_suitable_free_block(&mut heap, 2);
         assert_eq!(result, Some(2));
@@ -122,8 +118,8 @@ mod tests {
 
     #[test]
     fn test_find_suitable_free_block_without_sufficient_space() {
-        let mut heap = create_heap_with_free_list(vec![(0, 2)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 2)]);
+        let allocator = Allocator {};
 
         let result = allocator.find_suitable_free_block(&mut heap, 3);
         assert_eq!(result, None);
@@ -132,8 +128,8 @@ mod tests {
 
     #[test]
     fn test_find_suitable_free_block_with_alignment() {
-        let mut heap = create_heap_with_free_list(vec![(1, 4)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(1, 4)]);
+        let allocator = Allocator {};
 
         let result = allocator.find_suitable_free_block(&mut heap, 3);
         assert_eq!(result, Some(2)); // Starts at 2 because of alignment
@@ -142,10 +138,10 @@ mod tests {
 
     #[test]
     fn test_split_free_block_no_remainder() {
-        let mut heap = Heap::new(8);
+        let mut heap = Heap::new(8, 0);
         heap.free_list = free_list![(0, 8)];
 
-        let allocator = Allocator::new(4);
+        let allocator = Allocator::new();
         allocator.split_free_block(&mut heap, 0, 8, 0, 4);
 
         assert_eq!(heap.free_list.to_vec(), vec![(4, 4)]);
@@ -153,10 +149,10 @@ mod tests {
 
     #[test]
     fn test_split_free_block_remainder_before() {
-        let mut heap = Heap::new(10);
+        let mut heap = Heap::new(10, 4);
         heap.free_list = free_list![(0, 8)];
 
-        let allocator = Allocator::new(4);
+        let allocator = Allocator::new();
         allocator.split_free_block(&mut heap, 0, 8, 2, 6);
 
         assert_eq!(heap.free_list.to_vec(), vec![(0, 2), (6, 2)]);
@@ -164,10 +160,10 @@ mod tests {
 
     #[test]
     fn test_split_free_block_remainder_after() {
-        let mut heap = Heap::new(10);
+        let mut heap = Heap::new(10, 4);
         heap.free_list = free_list![(0, 8)];
 
-        let allocator = Allocator::new(4);
+        let allocator = Allocator::new();
         allocator.split_free_block(&mut heap, 0, 8, 0, 6);
 
         assert_eq!(heap.free_list.to_vec(), vec![(6, 2)]);
@@ -175,10 +171,10 @@ mod tests {
 
     #[test]
     fn test_split_free_block_remainders_both_sides() {
-        let mut heap = Heap::new(10);
+        let mut heap = Heap::new(10, 4);
         heap.free_list = free_list![(0, 8)];
 
-        let allocator = Allocator::new(4);
+        let allocator = Allocator::new();
         allocator.split_free_block(&mut heap, 0, 8, 2, 6);
 
         assert_eq!(heap.free_list.to_vec(), vec![(0, 2), (6, 2)]);
@@ -186,47 +182,19 @@ mod tests {
 
     #[test]
     fn test_split_free_block_no_matching_block() {
-        let mut heap = Heap::new(8);
+        let mut heap = Heap::new(8, 4);
         heap.free_list = free_list![(0, 4), (4, 4)];
 
-        let allocator = Allocator::new(4);
+        let allocator = Allocator::new();
         allocator.split_free_block(&mut heap, 8, 4, 8, 12);
 
         assert_eq!(heap.free_list.to_vec(), vec![(0, 4), (4, 4)]); // Free list remains unchanged.
     }
 
     #[test]
-    fn test_aligned_position() {
-        let allocator = Allocator { alignment: 4 };
-
-        assert_eq!(allocator.aligned_position(0), 0);
-        assert_eq!(allocator.aligned_position(1), 4);
-        assert_eq!(allocator.aligned_position(2), 4);
-        assert_eq!(allocator.aligned_position(3), 4);
-        assert_eq!(allocator.aligned_position(4), 4);
-        assert_eq!(allocator.aligned_position(5), 8);
-
-        let allocator = Allocator { alignment: 8 };
-
-        assert_eq!(allocator.aligned_position(0), 0);
-        assert_eq!(allocator.aligned_position(5), 8);
-        assert_eq!(allocator.aligned_position(8), 8);
-        assert_eq!(allocator.aligned_position(9), 16);
-    }
-
-    #[test]
-    fn test_no_alignment() {
-        let allocator = Allocator { alignment: 0 };
-
-        for i in 0..10 {
-            assert_eq!(allocator.aligned_position(i), i);
-        }
-    }
-
-    #[test]
     fn test_allocate_with_sufficient_space() {
-        let mut heap = create_heap_with_free_list(vec![(0, 4)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 4)]);
+        let allocator = Allocator {};
         let object = Object::new(vec![
             Field::new_scalar(1),
             Field::new_scalar(2),
@@ -242,8 +210,8 @@ mod tests {
 
     #[test]
     fn test_allocate_without_sufficient_space() {
-        let mut heap = create_heap_with_free_list(vec![(0, 2)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 2)]);
+        let allocator = Allocator {};
         let object = Object::new(vec![
             Field::new_scalar(1),
             Field::new_scalar(2),
@@ -258,8 +226,8 @@ mod tests {
 
     #[test]
     fn test_allocate_multiple_objects() {
-        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 10)]);
+        let allocator = Allocator {};
 
         let object1 = Object::new(vec![Field::new_scalar(1), Field::new_scalar(2)]);
         let object2 = Object::new(vec![
@@ -280,8 +248,8 @@ mod tests {
 
     #[test]
     fn test_allocate_after_deallocate() {
-        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
-        let allocator = Allocator { alignment: 2 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 10)]);
+        let allocator = Allocator {};
 
         let object1 = Object::new(vec![Field::new_scalar(1), Field::new_scalar(2)]);
         let addr1 = allocator.allocate(&mut heap, object1, true).unwrap();
@@ -298,8 +266,8 @@ mod tests {
 
     #[test]
     fn test_calc_memory_after_allocate() {
-        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
-        let allocator = Allocator { alignment: 0 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 10)]);
+        let allocator = Allocator {};
 
         assert_eq!(heap.calc_free_memory(), 10);
 
@@ -315,8 +283,8 @@ mod tests {
 
     #[test]
     fn test_free_object() {
-        let mut heap = create_heap_with_free_list(vec![(0, 10)]);
-        let allocator = Allocator { alignment: 0 };
+        let mut heap = create_heap_with_free_list(2, vec![(0, 10)]);
+        let allocator = Allocator {};
         let object = Object::new(vec![
             Field::new_scalar(1),
             Field::new_scalar(2),
